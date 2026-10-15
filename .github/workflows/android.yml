@@ -33,6 +33,27 @@ jobs:
         run: node node_modules/@capacitor/cli/bin/capacitor sync android
       - name: Apply branding and fullscreen
         run: python3 scripts/prepare_android.py
+      - name: Fix Android Manifest XML
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+
+          content = manifest.read_text(encoding="utf-8")
+
+          if 'xmlns:android=' not in content:
+              content = content.replace(
+                  "<manifest",
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android"',
+                  1
+              )
+              manifest.write_text(content, encoding="utf-8")
+
+          ET.parse(manifest)
+          print("Android Manifest XML validated successfully!")
+          PY
       - name: Verify Android Manifest
         run: |
           echo "===== AndroidManifest.xml ====="
