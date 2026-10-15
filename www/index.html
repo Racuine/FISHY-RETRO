@@ -227,7 +227,7 @@ function tap(x,y){
           return
          }
          if(state==='ready'){
-          if(y>=397&&y<=442){openLeaderboard();return}
+          if(y>=397&&y<=442){setTimeout(openLeaderboard,0);return}
           if(y>=225&&y<=279){if(!helpSeen)openHelp('ready');else begin();return}
           if(y>=291&&y<=339){state='collection';collectionPage=0;return}
           if(y>=349&&y<=395){openHelp('ready');return}
@@ -235,7 +235,7 @@ function tap(x,y){
           return
          }
          if(state==='dead'){
-          if(y>=425&&y<=472){openLeaderboard();return}
+          if(y>=425&&y<=472){setTimeout(openLeaderboard,0);return}
           if(y>=319&&y<=363){begin();return}
           if(y>=374&&y<=420){state='collection';collectionPage=0;return}
           return
@@ -246,9 +246,22 @@ function tap(x,y){
 }
 function toggleSound(){muted=!muted;try{localStorage.setItem('fishy-retro-muted',muted?'1':'0')}catch(e){}if(!muted){audio();if(state==='play')startMusic()}}
 function pointer(e){if(document.getElementById('online').classList.contains('show'))return;e.preventDefault();const r=c.getBoundingClientRect();tap((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}
-// Handle the completed tap, not pointerdown: otherwise Android's synthetic click
-// can hit a newly created modal button and close the leaderboard immediately.
-c.addEventListener('pointerup',pointer,{passive:false});
+// Gameplay reacts instantly on finger contact; menus are handled on release.
+// Leaderboard opening is deferred to the next task so the Android synthesized
+// click cannot land on a newly inserted modal button.
+let gamePointerId=null;
+c.addEventListener('pointerdown',e=>{
+         if(modal.classList.contains('show'))return;
+         if(state==='play'){
+          gamePointerId=e.pointerId;
+          pointer(e);
+         }
+},{passive:false});
+c.addEventListener('pointerup',e=>{
+         if(e.pointerId===gamePointerId){gamePointerId=null;return;}
+         pointer(e);
+},{passive:false});
+c.addEventListener('pointercancel',e=>{if(e.pointerId===gamePointerId)gamePointerId=null;});
 window.addEventListener('keydown',e=>{if(document.getElementById('online').classList.contains('show'))return;if(['Space','ArrowUp','KeyP','Escape','KeyM'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='KeyP'||e.code==='Escape'){if(state==='help'){state=helpFrom}else if(state==='collection'){state='ready'}else pause();return}if(e.code==='KeyM'){toggleSound();return}if(e.code==='Space'||e.code==='ArrowUp'){if(state==='ready'){if(!helpSeen)openHelp('ready');else begin()}else if(state==='dead')begin();else if(state==='help'){helpSeen=true;try{localStorage.setItem('fishy-retro-help-seen','1')}catch(e){}if(helpFrom==='ready')begin();else state=helpFrom}else if(state==='paused')pause();else tap(W/2,H/2)}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')state='paused'});
 function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
