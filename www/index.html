@@ -196,7 +196,10 @@ if(!collection[selected])selected=0;
 function saveSelection(){try{localStorage.setItem('fishy-retro-selected',String(selected))}catch(e){}}
 function unlockedCount(){return collection.filter(f=>best>=f.need).length}
 
-try{best=Number(localStorage.getItem('fishy-retro-best'))||0;muted=localStorage.getItem('fishy-retro-muted')==='1'}catch(e){}
+// The anonymous record belongs to this device; signed-in records belong to Supabase profiles.
+let localBest=0;
+try{localBest=Math.max(0,Number(localStorage.getItem('fishy-retro-local-best')??localStorage.getItem('fishy-retro-best'))||0);muted=localStorage.getItem('fishy-retro-muted')==='1';localStorage.setItem('fishy-retro-local-best',String(localBest))}catch(e){}
+best=localBest;
 if(best<collection[selected].need)selected=0;
 try{helpSeen=localStorage.getItem('fishy-retro-help-seen')==='1'}catch(e){}
 function audio(){if(muted)return null;try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}catch(e){return null}}
@@ -269,7 +272,7 @@ vy=Math.min(4.6,vy+.21*dt);fishY+=vy*dt;
 spawn+=dt;const interval=Math.max(76,112-score*1.1);
 if(spawn>=interval){spawn-=interval;const gap=Math.max(116,147-score*.6),center=rnd(118,333);obstacles.push({x:W+22,top:center-gap/2,bottom:center+gap/2,passed:false})}
 const speed=Math.min(2.8,1.65+score*.025);
-for(const o of obstacles){o.x-=speed*dt;if(!o.passed&&o.x+34<fishX){o.passed=true;score++;sfx('point');if(!recordCelebrated&&score>runStartBest&&score>=2){recordCelebrated=true;recordToast=90;sfx('record')}if(score>best){const oldBest=best;best=score;for(let i=1;i<collection.length;i++)if(oldBest<collection[i].need&&best>=collection[i].need)celebrateUnlock(i);try{localStorage.setItem('fishy-retro-best',String(best))}catch(e){}}}
+for(const o of obstacles){o.x-=speed*dt;if(!o.passed&&o.x+34<fishX){o.passed=true;score++;sfx('point');if(!recordCelebrated&&score>runStartBest&&score>=2){recordCelebrated=true;recordToast=90;sfx('record')}if(score>best){const oldBest=best;best=score;for(let i=1;i<collection.length;i++)if(oldBest<collection[i].need&&best>=collection[i].need)celebrateUnlock(i);if(!session){localBest=best;try{localStorage.setItem('fishy-retro-local-best',String(localBest))}catch(e){}}}}
 if(fishX+fishR>o.x+3&&fishX-fishR<o.x+31&&(fishY-fishR<o.top||fishY+fishR>o.bottom))die()}
 obstacles=obstacles.filter(o=>o.x>-50);if(fishY-fishR<15||fishY+fishR>floor)die();music()
 }
@@ -330,7 +333,12 @@ function showOnline(html){content.innerHTML=html;modal.classList.add('show')}
 function closeOnline(){modal.classList.remove('show');content.innerHTML=''}
 function errorOnline(msg){const e=document.getElementById('online-error');if(e)e.textContent=msg}
 function getStored(){try{return JSON.parse(localStorage.getItem('fishy-v8-session')||'null')}catch(e){return null}}
-function saveSession(s){session=s;try{if(s)localStorage.setItem('fishy-v8-session',JSON.stringify(s));else localStorage.removeItem('fishy-v8-session')}catch(e){}}
+function applyRecordScope(){
+         // Never mix a device-only record with a signed-in player's record.
+         best=session?Math.max(0,Number(profile?.best_score)||0):localBest;
+         if(best<collection[selected].need){selected=0;saveSelection()}
+}
+function saveSession(s){session=s;if(!s){profile=null;applyRecordScope()}try{if(s)localStorage.setItem('fishy-v8-session',JSON.stringify(s));else localStorage.removeItem('fishy-v8-session')}catch(e){}}
 async function api(path,method='GET',body=null,token=null){
          if(!configured)throw Error('Supabase non configuré : consulte le README du ZIP V8.');
          const headers={'apikey':anon,'Content-Type':'application/json'};
@@ -347,7 +355,7 @@ async function refresh(){
          catch(e){saveSession(null);profile=null;return false}
 }
 async function rpc(name,args={}){await refresh();return api('/rest/v1/rpc/'+name,'POST',args)}
-async function loadProfile(){if(!session)return null;await refresh();if(!session)return null;const rows=await api('/rest/v1/profiles?select=id,username,country,best_score&id=eq.'+encodeURIComponent(session.user.id));profile=rows?.[0]||null;return profile}
+async function loadProfile(){if(!session)return null;await refresh();if(!session)return null;const rows=await api('/rest/v1/profiles?select=id,username,country,best_score&id=eq.'+encodeURIComponent(session.user.id));profile=rows?.[0]||null;applyRecordScope();return profile}
 async function openLeaderboard(){onlineFrom=state;if(state==='play')state='paused';if(!configured){showOnline('<h2>🌍 CLASSEMENT</h2><p>Le classement en ligne nécessite une configuration Supabase.</p><p class="small">Renseigne www/config.js puis exécute le SQL fourni dans le ZIP.</p><button id="close-online">RETOUR AU JEU</button>');document.getElementById('close-online').onclick=leaveOnline;return}
          showOnline('<h2>🌍 CLASSEMENT</h2><p>Connexion au serveur...</p>');try{await loadProfile();if(!session)renderLogin();else if(!profile)renderCreateProfile();else await renderRanking()}catch(e){showOnline('<h2>CONNEXION IMPOSSIBLE</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}}
 function leaveOnline(){closeOnline();if(onlineFrom==='play')state='paused'}
@@ -362,8 +370,15 @@ function renderCreateProfile(){showOnline(`<h2>🌍 CRÉER TON PROFIL</h2><p>Cho
 async function renderRanking(){rankingScope=rankingScope==='country'?'country':'world';showOnline(`<h2>🏆 CLASSEMENT</h2><div class="profile">${esc(profile.username)} · ${esc(countryName(profile.country))}<br>Ton record en ligne : <b>${profile.best_score}</b></div><div class="tabs"><button id="rank-world">🌍 MONDIAL</button><button id="rank-country">${esc(profile.country)} MON PAYS</button></div><div id="rank-content"><p>Chargement...</p></div><button id="rank-refresh" class="alt">ACTUALISER</button><button id="logout" class="alt">DÉCONNEXION</button><button id="close-online">RETOUR</button>`);
          document.getElementById('rank-world').onclick=()=>{rankingScope='world';fetchRanks()};document.getElementById('rank-country').onclick=()=>{rankingScope='country';fetchRanks()};document.getElementById('rank-refresh').onclick=fetchRanks;document.getElementById('logout').onclick=logout;document.getElementById('close-online').onclick=leaveOnline;await fetchRanks()}
 async function fetchRanks(){const target=document.getElementById('rank-content');if(!target)return;target.innerHTML='<p>Chargement...</p>';try{const country=rankingScope==='country'?profile.country:null;const [rows,own]=await Promise.all([rpc('fishy_leaderboard',{p_country:country,p_limit:100}),rpc('fishy_my_rank',{p_country:country})]);const medals=['🥇','🥈','🥉'];target.innerHTML=`<p class="small">TOP 100 ${rankingScope==='world'?'MONDIAL':esc(countryName(profile.country))}</p><table><thead><tr><th>#</th><th>JOUEUR</th><th>SCORE</th></tr></thead><tbody>${(rows||[]).map((r,i)=>`<tr class="${r.username===profile.username?'mine':''}"><td>${medals[i]||r.position}</td><td>${esc(countryName(r.country).split(' ')[0])} ${esc(r.username)}</td><td>${r.best_score}</td></tr>`).join('')||'<tr><td colspan="3">Aucun score</td></tr>'}</tbody></table><p class="profile">TON RANG : <b>${own?.[0]?.position?'#'+own[0].position:'Non classé'}</b> · ${profile.best_score} points</p>`}catch(e){target.innerHTML='<p class="error">'+esc(e.message)+'</p>'}}
-async function logout(){try{if(session)await api('/auth/v1/logout','POST',{})}catch(e){}saveSession(null);profile=null;renderLogin()}
-async function submitRecord(value){if(!configured||!session||!profile||!Number.isSafeInteger(value)||value<=profile.best_score)return;try{await rpc('submit_fishy_score',{p_score:value});profile.best_score=Math.max(profile.best_score,value)}catch(e){console.warn('Score en attente de synchronisation',e.message)}}
+async function logout(){try{if(session)await api('/auth/v1/logout','POST',{})}catch(e){}saveSession(null);renderLogin()}
+async function submitRecord(value){
+         if(!configured||!session||!profile||!Number.isSafeInteger(value)||value<=Number(profile.best_score))return;
+         const userId=session.user.id;
+         try{
+          await rpc('submit_fishy_score',{p_score:value});
+          if(session?.user?.id===userId){profile.best_score=Math.max(Number(profile.best_score)||0,value);best=Math.max(best,profile.best_score)}
+         }catch(e){console.warn('Score non synchronisé :',e.message)}
+}
 const OAUTH_CALLBACK='fishyretro://auth/callback';
 async function googleLogin(){
          if(!configured)return;
@@ -404,6 +419,8 @@ try{
 }catch(e){console.warn('OAuth deep link listener:',e)}
 if(location.hash.includes('access_token='))oauthCallback(location.href);
 session=getStored();
+// A stored session must be validated and its own score fetched before showing a record.
+if(session){best=0;loadProfile().catch(e=>console.warn('Profil non chargé :',e.message))}
 // Propose profile creation on first launch when online mode is configured.
 if(configured&&!session){let dismissed=false;try{dismissed=localStorage.getItem('fishy-v8-welcome-dismissed')==='1'}catch(e){}if(!dismissed)setTimeout(()=>{if(state==='ready'&&!modal.classList.contains('show')){onlineFrom='ready';renderLogin();const back=document.getElementById('close-online');back.textContent='JOUER SANS COMPTE';back.onclick=()=>{try{localStorage.setItem('fishy-v8-welcome-dismissed','1')}catch(e){}leaveOnline()}}},250)}
 
