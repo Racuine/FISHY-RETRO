@@ -22,8 +22,15 @@ jobs:
           packages: platform-tools
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Generate Android project
-        run: node node_modules/@capacitor/cli/bin/capacitor add android
+      - name: Generate Android project if missing
+        run: |
+          if [ ! -d "android" ]; then
+            node node_modules/@capacitor/cli/bin/capacitor add android
+          else
+            echo "Android project already exists, skipping creation."
+          fi
+      - name: Sync Android
+        run: node node_modules/@capacitor/cli/bin/capacitor sync android
       - name: Apply branding and fullscreen
         run: python3 scripts/prepare_android.py
       - name: Configure release signing (optional)
