@@ -246,7 +246,9 @@ function tap(x,y){
 }
 function toggleSound(){muted=!muted;try{localStorage.setItem('fishy-retro-muted',muted?'1':'0')}catch(e){}if(!muted){audio();if(state==='play')startMusic()}}
 function pointer(e){if(document.getElementById('online').classList.contains('show'))return;e.preventDefault();const r=c.getBoundingClientRect();tap((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}
-c.addEventListener('pointerdown',pointer,{passive:false});
+// Handle the completed tap, not pointerdown: otherwise Android's synthetic click
+// can hit a newly created modal button and close the leaderboard immediately.
+c.addEventListener('pointerup',pointer,{passive:false});
 window.addEventListener('keydown',e=>{if(document.getElementById('online').classList.contains('show'))return;if(['Space','ArrowUp','KeyP','Escape','KeyM'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='KeyP'||e.code==='Escape'){if(state==='help'){state=helpFrom}else if(state==='collection'){state='ready'}else pause();return}if(e.code==='KeyM'){toggleSound();return}if(e.code==='Space'||e.code==='ArrowUp'){if(state==='ready'){if(!helpSeen)openHelp('ready');else begin()}else if(state==='dead')begin();else if(state==='help'){helpSeen=true;try{localStorage.setItem('fishy-retro-help-seen','1')}catch(e){}if(helpFrom==='ready')begin();else state=helpFrom}else if(state==='paused')pause();else tap(W/2,H/2)}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')state='paused'});
 function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
@@ -381,7 +383,7 @@ async function emailPasswordAuth(mode){
            const result=await api('/auth/v1/token?grant_type=password','POST',{email,password});
            await acceptAuth(result);
           }
-         }catch(e){errorOnline(e.message==='Invalid login credentials'?'Identifiants incorrects, ou compte créé avec Google uniquement.':e.message)}
+         }catch(e){const msg=String(e.message||'');errorOnline(/email rate limit exceeded|over_email_send_rate_limit/i.test(msg)?'Supabase tente encore d envoyer un email de confirmation. Dans Supabase > Authentication > Providers > Email, désactive Confirm email puis enregistre. Si cette option est déjà désactivée, vérifie que ton application utilise le bon projet Supabase.':msg==='Invalid login credentials'?'Identifiants incorrects, ou compte créé avec Google uniquement.':msg)}
          finally{if(button.isConnected){button.disabled=false;button.textContent=mode==='signup'?'CRÉER MON COMPTE':'SE CONNECTER'}}
 }
 async function acceptAuth(data){if(!data?.access_token||!data?.user)throw Error('Réponse de connexion incomplète.');saveSession({...data,expires_at:Date.now()+(data.expires_in||3600)*1000});await loadProfile();if(profile)await renderRanking();else renderCreateProfile()}
