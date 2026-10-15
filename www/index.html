@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#48b9e0"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><title>Fishy! Retro V8 — Classements</title>
+<style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#48b9e0;touch-action:none}body{display:grid;place-items:center;font-family:monospace}canvas{display:block;width:min(100vw,calc(100dvh * 0.6));height:min(100dvh,calc(100vw / 0.6));image-rendering:pixelated;touch-action:none}</style>
+<style>
+#online{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:#092d42e8;padding:14px;font-family:monospace;color:#f8f3d5;touch-action:pan-y}
+#online.show{display:flex}#online .modal{width:min(95vw,390px);max-height:92dvh;overflow-y:auto;background:#154661;border:4px solid #0c2b40;box-shadow:0 0 0 3px #4aacc6;padding:17px;image-rendering:pixelated}
+#online h2{margin:2px 0 12px;color:#ffe58a;text-align:center;font-size:21px}#online p{font-size:12px;line-height:1.5}#online label{display:block;font-size:12px;margin:11px 0 5px}#online input,#online select{display:block;width:100%;border:2px solid #80c5d8;border-radius:0;padding:11px;background:#ecfcff;color:#15374a;font:15px monospace}#online button{background:#ffe58a;color:#12374a;border:3px solid #8b6e37;font:bold 13px monospace;padding:11px;cursor:pointer;margin:6px 0;width:100%;min-height:42px}#online button.alt{background:#a8e2ef;border-color:#447b89}#online button:disabled{opacity:.5}#online .small{font-size:11px;color:#c8e8ee}#online .error{color:#ffe58a;min-height:20px;font-size:12px;line-height:1.5}#online .tabs{display:flex;gap:5px}#online .tabs button{font-size:11px}#online table{width:100%;font-size:12px;border-collapse:collapse}#online td,#online th{padding:8px 3px;border-bottom:1px solid #39758a;text-align:left}#online td:last-child,#online th:last-child{text-align:right}#online .mine{background:#34637b}#online .profile{background:#1d536a;padding:8px;margin:8px 0;font-size:12px}#online .hide{display:none}
+</style></head>
+<body><canvas id="game" width="288" height="480" aria-label="Fishy! jeu rétro"></canvas>
+<div id="online" role="dialog" aria-modal="true" aria-label="Classement FISHY"><div class="modal" id="online-content"></div></div>
+<script src="config.js"></script><script>
+(()=>{'use strict';
+const c=document.getElementById('game'),g=c.getContext('2d',{alpha:false});g.imageSmoothingEnabled=false;
+const W=288,H=480,floor=446,fishX=75,fishR=11;
+let state='ready',fishY=210,vy=0,score=0,best=0,frame=0,last=0,spawn=0,obstacles=[],bubbles=[],flash=0;
+let muted=false,ac=null,nextBeat=0,beat=0;
+const collection=[
+{name:'FISHY CLASSIC',need:0,body:'#ffbb4b',light:'#ffd36e',fin:'#ff8b4b',accent:'#f19b43'},
+{name:'BLUE FIN',need:30,body:'#217dc8',light:'#64d4ff',fin:'#165baf',accent:'#b2f5ff'},
+{name:'CLOWNY',need:80,body:'#ed662e',light:'#ffad5c',fin:'#b84425',accent:'#ffffff',stripe:true},
+{name:'ROYAL FIN',need:150,body:'#7647c6',light:'#c494ff',fin:'#4935a1',accent:'#f7d4ff'},
+{name:'GOLDEN FISH',need:250,body:'#d39a13',light:'#ffe66a',fin:'#a8750d',accent:'#fff5ae'},
+{name:'TOXIC FIN',need:370,body:'#36a52b',light:'#b5ff4d',fin:'#1b7d46',accent:'#e6ff94'},
+{name:'RAINBOW FISH',need:500,body:'#ee537e',light:'#ffe061',fin:'#55c4e6',accent:'#b98bff',rainbow:true},
+{name:'SHADOW FISH',need:700,body:'#23253e',light:'#5b517a',fin:'#141a2e',accent:'#ff4d65',redEye:true},
+{name:'CRYSTAL FISH',need:900,body:'#8ee4ff',light:'#e5fcff',fin:'#4aa9d6',accent:'#ffffff'},
+{name:'COSMIC FISH',need:1000,body:'#653ab2',light:'#e6b3ff',fin:'#2e1e7a',accent:'#ffe66a',cosmic:true}
+];
+let selected=0,collectionPage=0,newUnlock=-1,unlockToast=-1,unlockTimer=0,unlockBurst=[],swimParticles=[],recordToast=0,recordCelebrated=false,runStartBest=0,helpSeen=false,helpFrom='ready';
+try{selected=Number(localStorage.getItem('fishy-retro-selected'))||0}catch(e){};
+if(!collection[selected])selected=0;
+function saveSelection(){try{localStorage.setItem('fishy-retro-selected',String(selected))}catch(e){}}
+function unlockedCount(){return collection.filter(f=>best>=f.need).length}
+
+try{best=Number(localStorage.getItem('fishy-retro-best'))||0;muted=localStorage.getItem('fishy-retro-muted')==='1'}catch(e){}
+if(best<collection[selected].need)selected=0;
+try{helpSeen=localStorage.getItem('fishy-retro-help-seen')==='1'}catch(e){}
+function audio(){if(muted)return null;try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}catch(e){return null}}
+function tone(freq,duration=.09,type='square',volume=.025,when){const a=audio();if(!a)return;const t=when??a.currentTime;try{const o=a.createOscillator(),v=a.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);v.gain.setValueAtTime(.0001,t);v.gain.exponentialRampToValueAtTime(volume,t+.009);v.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+duration+.01)}catch(e){}}
+function music(){if(state!=='play'||muted||!ac||ac.state!=='running')return;const notes=[196,0,247,0,294,0,247,0,220,0,262,0,330,0,262,0];let n=0;while(nextBeat<ac.currentTime+.08&&n++<4){if(nextBeat<ac.currentTime)nextBeat=ac.currentTime+.01;let f=notes[beat%notes.length];if(f)tone(f,.12,'triangle',.012,nextBeat);if(beat%4===0)tone(98,.07,'sine',.009,nextBeat);nextBeat+=.19;beat++}}
+function startMusic(){if(!audio())return;nextBeat=ac.currentTime+.03;beat=0}
+function sfx(kind){if(kind==='swim')tone(440,.055,'square',.016);else if(kind==='point'){tone(660,.09,'square',.035);tone(880,.11,'square',.025,ac?ac.currentTime+.09:undefined)}else if(kind==='die'){tone(170,.24,'sawtooth',.04)}else if(kind==='pause')tone(350,.08,'triangle',.02);else if(kind==='record'){const a=audio();if(a){const t=a.currentTime+.02;[659,880,1047].forEach((f,i)=>tone(f,.12,'triangle',.025,t+i*.09))}}else if(kind==='unlock'){const a=audio();if(a){const t=a.currentTime+.02;[523,659,784,1047].forEach((f,i)=>tone(f,.17,'square',.025,t+i*.105))}}}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function reset(){unlockToast=-1;unlockTimer=0;unlockBurst=[];swimParticles=[];recordToast=0;recordCelebrated=false;state='ready';fishY=210;vy=0;score=0;frame=0;spawn=0;obstacles=[];bubbles=[];flash=0}
+function begin(){reset();runStartBest=best;newUnlock=-1;state='play';vy=-3.9;startMusic();sfx('swim')}
+function pause(){if(state==='play'){state='paused';sfx('pause')}else if(state==='paused'){state='play';startMusic();sfx('pause')}}
+function openHelp(from){helpFrom=from;state='help'}
+function tap(x,y){
+ if(state==='help'){if(y>=342&&y<=402){try{localStorage.setItem('fishy-retro-help-seen','1')}catch(e){}helpSeen=true;if(helpFrom==='ready')begin();else state=helpFrom}return}
+ if(state==='collection'){
+  if(y<80){state='ready';return}
+  if(y>=91&&y<=360){const col=Math.floor((x-17)/128),row=Math.floor((y-91)/91);if(col>=0&&col<2&&row>=0&&row<3){const idx=collectionPage*6+row*2+col;if(idx<collection.length&&best>=collection[idx].need){selected=idx;saveSelection();sfx('point')}}return}
+  if(y>370){collectionPage=1-collectionPage;return}
+  return
+ }
+ if(state==='paused'){
+  if(y>=188&&y<=240){pause();return}
+  if(y>=247&&y<=293){reset();return}
+  if(y>=300&&y<=345){openHelp('paused');return}
+  return
+ }
+ if(state==='ready'){
+  if(y>=397&&y<=442){openLeaderboard();return}
+  if(y>=225&&y<=279){if(!helpSeen)openHelp('ready');else begin();return}
+  if(y>=291&&y<=339){state='collection';collectionPage=0;return}
+  if(y>=349&&y<=395){openHelp('ready');return}
+  if(y<48&&x>W-54){toggleSound();return}
+  return
+ }
+ if(state==='dead'){
+  if(y>=425&&y<=472){openLeaderboard();return}
+  if(y>=319&&y<=363){begin();return}
+  if(y>=374&&y<=420){state='collection';collectionPage=0;return}
+  return
+ }
+ if(y<48&&x<54&&state==='play'){pause();return}
+ if(y<48&&x>W-54){toggleSound();return}
+ if(state==='play'){vy=-3.9;sfx('swim');emitSwim()}
+}
+function toggleSound(){muted=!muted;try{localStorage.setItem('fishy-retro-muted',muted?'1':'0')}catch(e){}if(!muted){audio();if(state==='play')startMusic()}}
+function pointer(e){if(document.getElementById('online').classList.contains('show'))return;e.preventDefault();const r=c.getBoundingClientRect();tap((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}
+c.addEventListener('pointerdown',pointer,{passive:false});
+window.addEventListener('keydown',e=>{if(document.getElementById('online').classList.contains('show'))return;if(['Space','ArrowUp','KeyP','Escape','KeyM'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='KeyP'||e.code==='Escape'){if(state==='help'){state=helpFrom}else if(state==='collection'){state='ready'}else pause();return}if(e.code==='KeyM'){toggleSound();return}if(e.code==='Space'||e.code==='ArrowUp'){if(state==='ready'){if(!helpSeen)openHelp('ready');else begin()}else if(state==='dead')begin();else if(state==='help'){helpSeen=true;try{localStorage.setItem('fishy-retro-help-seen','1')}catch(e){}if(helpFrom==='ready')begin();else state=helpFrom}else if(state==='paused')pause();else tap(W/2,H/2)}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')state='paused'});
+function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
+function text(t,x,y,size=14,color='#fff',align='center'){g.font=`bold ${size}px monospace`;g.textAlign=align;g.fillStyle='#12344b';g.fillText(t,x+1,y+2);g.fillStyle=color;g.fillText(t,x,y)}
+function seaweed(x,tip,bottom,top){const w=34;rect(x,top,w,Math.max(0,bottom-top),'#175c50');rect(x+5,top+5,w-10,Math.max(0,bottom-top-10),'#27996d');for(let y=top+5;y<bottom-8;y+=23){rect(x-6,y+8,12,6,'#1b7a59');rect(x+28,y+14,12,6,'#1b7a59')}rect(x+11,top+2,6,Math.max(0,bottom-top-4),'#56c38c');if(tip==='down')rect(x-3,bottom-9,40,9,'#164b48');else rect(x-3,top,40,9,'#164b48')}
+function drawFishSprite(x,y,index,scale=1,tilt=0){const f=collection[index];g.save();g.translate(Math.round(x),Math.round(y));g.rotate(tilt);g.scale(scale,scale);
+rect(-10,-8,19,16,f.body);rect(-8,-6,16,12,f.light);const wag=Math.round(Math.sin(frame*.29)*3);rect(-16-wag,-7,8,5,f.fin);rect(-16+wag,2,8,5,f.fin);rect(-2,-12,7,5,f.accent);
+if(f.stripe){rect(-4,-7,3,14,'#ffffff');rect(1,-6,3,12,'#ffffff')}
+if(f.rainbow){rect(-7,-5,4,10,'#75e89a');rect(-2,-5,4,10,'#6ac6ff');rect(3,-5,3,10,'#b68aff')}
+if(f.cosmic){rect(-8,-5,2,2,'#fff3aa');rect(-3,3,2,2,'#fff3aa');rect(1,-6,2,2,'#fff3aa')}
+rect(4,-3,4,4,f.redEye?'#ff4d65':'#18354c');rect(5,-2,1,1,'#ffffff');rect(8,4,3,2,f.fin);g.restore()}
+function emitSwim(){if(swimParticles.length>20)return;for(let i=0;i<3;i++)swimParticles.push({x:fishX-14,y:fishY+rnd(-5,5),vx:rnd(-1.25,-.45),vy:rnd(-.6,.6),life:22+rnd(0,12),r:i===0?2:1})}
+function fish(){if(collection[selected].cosmic&&state==='play'){for(let i=0;i<3;i++){const x=fishX-20-i*8-(frame*.6%8),y=fishY+Math.sin(frame*.1+i*3)*7;rect(x,y,2,2,i%2?'#f8e581':'#d9aaff')}}drawFishSprite(fishX,fishY,selected,1,Math.max(-.35,Math.min(.6,vy*.075)))}
+
+function celebrateUnlock(i){newUnlock=i;unlockToast=i;unlockTimer=145;unlockBurst=Array.from({length:9},(_,j)=>({x:38+rnd(-10,30),y:87+rnd(-12,12),vx:rnd(-.35,.35),vy:rnd(-.55,-.1),life:rnd(25,55),color:['#ffe58a','#fff9d1','#8cf5ff','#f8a9ff'][j%4]}));sfx('unlock')}
+function die(){if(state==='dead')return;state='dead';flash=8;recordToast=0;sfx('die');submitRecord(score)}
+function medal(n){return n>=250?['DIAMANT','#b5faff']:n>=100?['OR','#ffe08b']:n>=30?['ARGENT','#e4edf4']:n>=10?['BRONZE','#f4b27a']:['DEBUTANT','#b4e6e4']}
+function update(dt){if(state==='paused')return;frame+=dt;flash=Math.max(0,flash-dt);recordToast=Math.max(0,recordToast-dt);for(const p of swimParticles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}swimParticles=swimParticles.filter(p=>p.life>0);if(unlockTimer>0){unlockTimer=Math.max(0,unlockTimer-dt);for(const p of unlockBurst){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.025*dt;p.life-=dt}unlockBurst=unlockBurst.filter(p=>p.life>0);if(unlockTimer===0)unlockToast=-1;}
+if(bubbles.length<35&&Math.random()<.14*dt)bubbles.push({x:rnd(8,280),y:480,r:rnd(1,3),v:rnd(.35,.95)});
+for(const b of bubbles)b.y-=b.v*dt;bubbles=bubbles.filter(b=>b.y>-8);
+if(state!=='play')return;
+vy=Math.min(4.6,vy+.21*dt);fishY+=vy*dt;
+spawn+=dt;const interval=Math.max(76,112-score*1.1);
+if(spawn>=interval){spawn-=interval;const gap=Math.max(116,147-score*.6),center=rnd(118,333);obstacles.push({x:W+22,top:center-gap/2,bottom:center+gap/2,passed:false})}
+const speed=Math.min(2.8,1.65+score*.025);
+for(const o of obstacles){o.x-=speed*dt;if(!o.passed&&o.x+34<fishX){o.passed=true;score++;sfx('point');if(!recordCelebrated&&score>runStartBest&&score>=2){recordCelebrated=true;recordToast=90;sfx('record')}if(score>best){const oldBest=best;best=score;for(let i=1;i<collection.length;i++)if(oldBest<collection[i].need&&best>=collection[i].need)celebrateUnlock(i);try{localStorage.setItem('fishy-retro-best',String(best))}catch(e){}}}
+if(fishX+fishR>o.x+3&&fishX-fishR<o.x+31&&(fishY-fishR<o.top||fishY+fishR>o.bottom))die()}
+obstacles=obstacles.filter(o=>o.x>-50);if(fishY-fishR<15||fishY+fishR>floor)die();music()
+}
+function btn(x,y,w,h,label,color='#ffe08b'){panel(x,y,w,h);rect(x+5,y+5,3,h-10,color);text(label,x+w/2,y+h/2+5,14,color)}
+function panel(x,y,w,h){rect(x,y,w,h,'#103c5c');rect(x+4,y+4,w-8,h-8,'#1c5773')}
+function draw(){rect(0,0,W,H,'#48b9e0');for(let y=0;y<floor;y+=32)rect(0,y,W,1,'#7ad4ed');for(let i=0;i<8;i++){let x=(i*47+frame*.2)%340-25;rect(x,32+(i%4)*43,18,2,'#b1eafa')}
+for(const p of swimParticles){g.globalAlpha=Math.max(0,Math.min(1,p.life/18));g.strokeStyle='#e5fbff';g.strokeRect(Math.round(p.x),Math.round(p.y),p.r*2+1,p.r*2+1)}g.globalAlpha=1;
+for(const b of bubbles){g.strokeStyle='#dcfaff';g.strokeRect(Math.round(b.x),Math.round(b.y),Math.round(b.r*2),Math.round(b.r*2))}
+rect(0,floor,W,H-floor,'#b29b67');rect(0,floor,W,5,'#e3c78b');for(let i=0;i<15;i++)rect(i*21-8,floor+15+(i%3)*7,3,2,'#6e795e');
+for(const o of obstacles){seaweed(o.x,'down',o.top,0);seaweed(o.x,'up',floor,o.bottom)}
+fish();
+if(state==='play'||state==='paused'){text(String(score),W/2,54,30,'#fff6d7');panel(6,7,36,32);text('II',24,29,17,'#fff6d7')}
+if(state==='play'||state==='paused'||state==='ready'){panel(W-42,7,36,32);text(muted?'X':'♪',W-24,29,16,'#fff6d7')}
+if(state==='ready'){
+ panel(19,73,250,138);text('FISHY!',W/2,124,32,'#ffe08b');text('RETRO OCEAN',W/2,150,13,'#b4e6e4');drawFishSprite(W/2,179,selected,1.5);
+ btn(36,225,216,54,'JOUER');btn(36,291,216,48,'COLLECTION '+unlockedCount()+'/10','#b4e6e4');btn(36,349,216,46,'COMMENT JOUER','#ffffff');
+ btn(36,399,216,42,'CLASSEMENT MONDIAL','#a5f1bd');text('RECORD '+best,W/2,464,11,'#ffe08b')
+}
+if(state==='paused'){
+ panel(22,124,244,240);text('PAUSE',W/2,165,27,'#ffe08b');
+ btn(40,188,208,52,'REPRENDRE');btn(40,247,208,46,'MENU PRINCIPAL','#b4e6e4');btn(40,300,208,45,'AIDE','#ffffff')
+}
+if(state==='dead'){
+ panel(22,104,244,207);text('PARTIE TERMINEE',W/2,139,19,'#ffe08b');text('SCORE '+score,W/2,178,20);
+ text('RECORD '+best,W/2,205,13,'#b4e6e4');const m=medal(score);text('MEDAILLE '+m[0],W/2,236,13,m[1]);
+ if(score>=runStartBest&&score>0)text('BIEN JOUE !',W/2,265,12,'#a5f1bd');
+ if(newUnlock>=0)text('DEBLOQUE : '+collection[newUnlock].name,W/2,291,10,'#ffe08b');
+ btn(40,319,208,44,'REJOUER');btn(40,374,208,46,'COLLECTION '+unlockedCount()+'/10','#b4e6e4');btn(40,427,208,40,'CLASSEMENT','#a5f1bd')
+}
+if(state==='help'){
+ panel(18,79,252,337);text('COMMENT JOUER',W/2,116,21,'#ffe08b');
+ text('TOUCHE L ECRAN',W/2,163,15);text('POUR FAIRE MONTER',W/2,185,13,'#b4e6e4');text('TON POISSON',W/2,205,13,'#b4e6e4');
+ text('EVITE LES ALGUES',W/2,250,15,'#ffe08b');text('ET BATS TON RECORD',W/2,275,12);
+ text('DEBLOQUE 10 POISSONS !',W/2,317,12,'#b4e6e4');
+ btn(39,347,210,52,helpFrom==='ready'?'C EST PARTI !':'RETOUR')
+}
+if(state==='collection'){
+ panel(10,12,268,445);text('COLLECTION',W/2,42,24,'#ffe08b');text('RETOUR',40,69,12);text('RECORD '+best,W-52,69,12,'#ffe08b');
+ for(let i=0;i<6;i++){const idx=collectionPage*6+i;if(idx>=collection.length)continue;const f=collection[idx],col=i%2,row=Math.floor(i/2),x=17+col*128,y=91+row*91,ok=best>=f.need;
+ panel(x,y,122,84);if(idx===selected){rect(x+3,y+3,116,3,'#ffe08b');rect(x+3,y+78,116,3,'#ffe08b')}
+ if(ok)drawFishSprite(x+61,y+26,idx,1.35);else{rect(x+41,y+15,39,24,'#17354a');text('?',x+61,y+34,19,'#7694a0')}
+ text(f.name,x+61,y+57,idx===0?10:9,ok?'#fff6d7':'#a0b8bf');text(ok?(idx===selected?'SELECTIONNE':'CHOISIR'):'RECORD '+f.need,x+61,y+74,10,ok?'#a5f1bd':'#a0b8bf')}
+ panel(34,386,220,42);text(collectionPage===0?'SUIVANTS  >':'<  PRECEDENTS',W/2,413,15,'#ffe08b')}
+if(recordToast>0&&state==='play'&&unlockToast<0){const alpha=Math.min(1,recordToast/14,(90-recordToast)/10);g.save();g.globalAlpha=Math.max(0,alpha);panel(81,70,126,31);text('NOUVEAU RECORD !',W/2,91,10,'#ffe08b');g.restore()}
+if(unlockToast>=0&&unlockTimer>0&&(state==='play'||state==='dead'||state==='paused')){const i=unlockToast,progress=Math.min(1,(145-unlockTimer)/12,unlockTimer/16),yy=Math.round(-10*(1-progress));g.save();g.globalAlpha=Math.max(0,progress);panel(42,66+yy,204,47);rect(46,70+yy,196,2,'#ffe58a');drawFishSprite(67,91+yy,i,.82);text('POISSON DEBLOQUE !',163,84+yy,10,'#ffe58a');text(collection[i].name,163,101+yy,11,'#ffffff');for(const p of unlockBurst)rect(p.x,p.y+yy,2,2,p.color);g.restore()}
+if(flash>0){g.fillStyle=`rgba(255,255,255,${flash/40})`;g.fillRect(0,0,W,H)}}
+function loop(now){const dt=Math.min(2.2,(now-last)/16.666||1);last=now;update(dt);draw();requestAnimationFrame(loop)}
+
+// Online mode: Supabase REST + Auth (no secret service key in the client).
+const config=window.FISHY_CONFIG||{},endpoint=(config.supabaseUrl||'').replace(/\/$/,''),anon=config.supabaseAnonKey||'';
+const configured=/^https:\/\//.test(endpoint)&&anon.length>20&&!anon.includes('REMPLACER');
+const modal=document.getElementById('online'),content=document.getElementById('online-content');
+let session=null,profile=null,onlineBusy=false,onlineFrom='ready',rankingScope='world';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const countries=[["AF", "Afghanistan"], ["ZA", "Afrique du Sud"], ["AL", "Albanie"], ["DZ", "Algérie"], ["DE", "Allemagne"], ["AD", "Andorre"], ["AO", "Angola"], ["AI", "Anguilla"], ["AQ", "Antarctique"], ["AG", "Antigua-et-Barbuda"], ["SA", "Arabie saoudite"], ["AR", "Argentine"], ["AM", "Arménie"], ["AW", "Aruba"], ["AU", "Australie"], ["AT", "Autriche"], ["AZ", "Azerbaïdjan"], ["BS", "Bahamas"], ["BH", "Bahreïn"], ["BD", "Bangladesh"], ["BB", "Barbade"], ["BE", "Belgique"], ["BZ", "Belize"], ["BM", "Bermudes"], ["BT", "Bhoutan"], ["BY", "Biélorussie"], ["BO", "Bolivie"], ["BA", "Bosnie-Herzégovine"], ["BW", "Botswana"], ["BN", "Brunei"], ["BR", "Brésil"], ["BG", "Bulgarie"], ["BF", "Burkina Faso"], ["BI", "Burundi"], ["BJ", "Bénin"], ["KH", "Cambodge"], ["CM", "Cameroun"], ["CA", "Canada"], ["CV", "Cap-Vert"], ["CL", "Chili"], ["CN", "Chine"], ["CY", "Chypre"], ["CO", "Colombie"], ["KM", "Comores"], ["CG", "Congo-Brazzaville"], ["CD", "Congo-Kinshasa"], ["KP", "Corée du Nord"], ["KR", "Corée du Sud"], ["CR", "Costa Rica"], ["HR", "Croatie"], ["CU", "Cuba"], ["CW", "Curaçao"], ["CI", "Côte d’Ivoire"], ["DK", "Danemark"], ["DJ", "Djibouti"], ["DM", "Dominique"], ["ES", "Espagne"], ["EE", "Estonie"], ["SZ", "Eswatini"], ["FJ", "Fidji"], ["FI", "Finlande"], ["FR", "France"], ["GA", "Gabon"], ["GM", "Gambie"], ["GH", "Ghana"], ["GI", "Gibraltar"], ["GD", "Grenade"], ["GL", "Groenland"], ["GR", "Grèce"], ["GP", "Guadeloupe"], ["GU", "Guam"], ["GT", "Guatemala"], ["GG", "Guernesey"], ["GN", "Guinée"], ["GQ", "Guinée équatoriale"], ["GW", "Guinée-Bissau"], ["GY", "Guyana"], ["GF", "Guyane française"], ["GE", "Géorgie"], ["GS", "Géorgie du Sud-et-les Îles Sandwich du Sud"], ["HT", "Haïti"], ["HN", "Honduras"], ["HU", "Hongrie"], ["IN", "Inde"], ["ID", "Indonésie"], ["IQ", "Irak"], ["IR", "Iran"], ["IE", "Irlande"], ["IS", "Islande"], ["IL", "Israël"], ["IT", "Italie"], ["JM", "Jamaïque"], ["JP", "Japon"], ["JE", "Jersey"], ["JO", "Jordanie"], ["KZ", "Kazakhstan"], ["KE", "Kenya"], ["KG", "Kirghizstan"], ["KI", "Kiribati"], ["KW", "Koweït"], ["RE", "La Réunion"], ["LA", "Laos"], ["LS", "Lesotho"], ["LV", "Lettonie"], ["LB", "Liban"], ["LR", "Liberia"], ["LY", "Libye"], ["LI", "Liechtenstein"], ["LT", "Lituanie"], ["LU", "Luxembourg"], ["MK", "Macédoine du Nord"], ["MG", "Madagascar"], ["MY", "Malaisie"], ["MW", "Malawi"], ["MV", "Maldives"], ["ML", "Mali"], ["MT", "Malte"], ["MA", "Maroc"], ["MQ", "Martinique"], ["MU", "Maurice"], ["MR", "Mauritanie"], ["YT", "Mayotte"], ["MX", "Mexique"], ["FM", "Micronésie"], ["MD", "Moldavie"], ["MC", "Monaco"], ["MN", "Mongolie"], ["MS", "Montserrat"], ["ME", "Monténégro"], ["MZ", "Mozambique"], ["MM", "Myanmar (Birmanie)"], ["NA", "Namibie"], ["NR", "Nauru"], ["NI", "Nicaragua"], ["NE", "Niger"], ["NG", "Nigeria"], ["NU", "Niue"], ["NO", "Norvège"], ["NC", "Nouvelle-Calédonie"], ["NZ", "Nouvelle-Zélande"], ["NP", "Népal"], ["OM", "Oman"], ["UG", "Ouganda"], ["UZ", "Ouzbékistan"], ["PK", "Pakistan"], ["PW", "Palaos"], ["PA", "Panama"], ["PG", "Papouasie-Nouvelle-Guinée"], ["PY", "Paraguay"], ["NL", "Pays-Bas"], ["BQ", "Pays-Bas caribéens"], ["PH", "Philippines"], ["PL", "Pologne"], ["PF", "Polynésie française"], ["PR", "Porto Rico"], ["PT", "Portugal"], ["PE", "Pérou"], ["QA", "Qatar"], ["HK", "R.A.S. chinoise de Hong Kong"], ["MO", "R.A.S. chinoise de Macao"], ["RO", "Roumanie"], ["GB", "Royaume-Uni"], ["RU", "Russie"], ["RW", "Rwanda"], ["CF", "République centrafricaine"], ["DO", "République dominicaine"], ["EH", "Sahara occidental"], ["BL", "Saint-Barthélemy"], ["KN", "Saint-Christophe-et-Niévès"], ["SM", "Saint-Marin"], ["MF", "Saint-Martin"], ["SX", "Saint-Martin (partie néerlandaise)"], ["PM", "Saint-Pierre-et-Miquelon"], ["VC", "Saint-Vincent-et-les Grenadines"], ["SH", "Sainte-Hélène"], ["LC", "Sainte-Lucie"], ["SV", "Salvador"], ["WS", "Samoa"], ["AS", "Samoa américaines"], ["ST", "Sao Tomé-et-Principe"], ["RS", "Serbie"], ["SC", "Seychelles"], ["SL", "Sierra Leone"], ["SG", "Singapour"], ["SK", "Slovaquie"], ["SI", "Slovénie"], ["SO", "Somalie"], ["SD", "Soudan"], ["SS", "Soudan du Sud"], ["LK", "Sri Lanka"], ["CH", "Suisse"], ["SR", "Suriname"], ["SE", "Suède"], ["SJ", "Svalbard et Jan Mayen"], ["SY", "Syrie"], ["SN", "Sénégal"], ["TJ", "Tadjikistan"], ["TZ", "Tanzanie"], ["TW", "Taïwan"], ["TD", "Tchad"], ["CZ", "Tchéquie"], ["TF", "Terres australes françaises"], ["IO", "Territoire britannique de l’océan Indien"], ["PS", "Territoires palestiniens"], ["TH", "Thaïlande"], ["TL", "Timor oriental"], ["TG", "Togo"], ["TK", "Tokelau"], ["TO", "Tonga"], ["TT", "Trinité-et-Tobago"], ["TN", "Tunisie"], ["TM", "Turkménistan"], ["TR", "Turquie"], ["TV", "Tuvalu"], ["UA", "Ukraine"], ["UY", "Uruguay"], ["VU", "Vanuatu"], ["VE", "Venezuela"], ["VN", "Viêt Nam"], ["WF", "Wallis-et-Futuna"], ["YE", "Yémen"], ["ZM", "Zambie"], ["ZW", "Zimbabwe"], ["EG", "Égypte"], ["AE", "Émirats arabes unis"], ["EC", "Équateur"], ["ER", "Érythrée"], ["VA", "État de la Cité du Vatican"], ["US", "États-Unis"], ["ET", "Éthiopie"], ["BV", "Île Bouvet"], ["CX", "Île Christmas"], ["IM", "Île de Man"], ["NF", "Île Norfolk"], ["KY", "Îles Caïmans"], ["CC", "Îles Cocos"], ["CK", "Îles Cook"], ["FO", "Îles Féroé"], ["HM", "Îles Heard-et-MacDonald"], ["FK", "Îles Malouines"], ["MP", "Îles Mariannes du Nord"], ["MH", "Îles Marshall"], ["UM", "Îles mineures éloignées des États-Unis"], ["PN", "Îles Pitcairn"], ["SB", "Îles Salomon"], ["TC", "Îles Turques-et-Caïques"], ["VG", "Îles Vierges britanniques"], ["VI", "Îles Vierges des États-Unis"], ["AX", "Îles Åland"]];
+const countryName=code=>countries.find(x=>x[0]===code)?.[1]||('🌍 '+code);
+function showOnline(html){content.innerHTML=html;modal.classList.add('show')}
+function closeOnline(){modal.classList.remove('show');content.innerHTML=''}
+function errorOnline(msg){const e=document.getElementById('online-error');if(e)e.textContent=msg}
+function getStored(){try{return JSON.parse(localStorage.getItem('fishy-v8-session')||'null')}catch(e){return null}}
+function saveSession(s){session=s;try{if(s)localStorage.setItem('fishy-v8-session',JSON.stringify(s));else localStorage.removeItem('fishy-v8-session')}catch(e){}}
+async function api(path,method='GET',body=null,token=null){
+ if(!configured)throw Error('Supabase non configuré : consulte le README du ZIP V8.');
+ const headers={'apikey':anon,'Content-Type':'application/json'};
+ if(token||session?.access_token)headers.Authorization='Bearer '+(token||session.access_token);
+ const response=await fetch(endpoint+path,{method,headers,body:body===null?undefined:JSON.stringify(body)});
+ const raw=await response.text();let data;try{data=raw?JSON.parse(raw):null}catch(e){data=null}
+ if(!response.ok)throw Error(data?.msg||data?.error_description||data?.message||data?.error||('Erreur réseau '+response.status));
+ return data;
+}
+async function refresh(){
+ if(!session)return false;
+ if(Date.now()<session.expires_at-60000)return true;
+ try{const r=await api('/auth/v1/token?grant_type=refresh_token','POST',{refresh_token:session.refresh_token});saveSession({...r,expires_at:Date.now()+r.expires_in*1000});return true}
+ catch(e){saveSession(null);profile=null;return false}
+}
+async function rpc(name,args={}){await refresh();return api('/rest/v1/rpc/'+name,'POST',args)}
+async function loadProfile(){if(!session)return null;await refresh();if(!session)return null;const rows=await api('/rest/v1/profiles?select=id,username,country,best_score&id=eq.'+encodeURIComponent(session.user.id));profile=rows?.[0]||null;return profile}
+async function openLeaderboard(){onlineFrom=state;if(state==='play')state='paused';if(!configured){showOnline('<h2>🌍 CLASSEMENT</h2><p>Le classement en ligne nécessite une configuration Supabase.</p><p class="small">Renseigne www/config.js puis exécute le SQL fourni dans le ZIP.</p><button id="close-online">RETOUR AU JEU</button>');document.getElementById('close-online').onclick=leaveOnline;return}
+ showOnline('<h2>🌍 CLASSEMENT</h2><p>Connexion au serveur...</p>');try{await loadProfile();if(!session)renderLogin();else if(!profile)renderCreateProfile();else await renderRanking()}catch(e){showOnline('<h2>CONNEXION IMPOSSIBLE</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}}
+function leaveOnline(){closeOnline();if(onlineFrom==='play')state='paused'}
+function renderLogin(){showOnline(`<h2>🐟 MON PROFIL</h2><p>Connecte-toi pour enregistrer ton record mondial et retrouver ton profil sur un autre appareil.</p><label>E-MAIL</label><input id="login-email" type="email" autocomplete="email" placeholder="toi@exemple.com" maxlength="254"><button id="email-send">RECEVOIR UN CODE PAR E-MAIL</button><button id="google-login" class="alt">SE CONNECTER AVEC GOOGLE</button><p class="small">Pas de mot de passe. Un code temporaire est envoyé par e-mail. Ton pays sera définitif après la création du profil.</p><p id="online-error" class="error"></p><button id="close-online" class="alt">RETOUR</button>`);
+ document.getElementById('email-send').onclick=sendEmailCode;document.getElementById('google-login').onclick=googleLogin;document.getElementById('close-online').onclick=leaveOnline}
+async function sendEmailCode(){const email=document.getElementById('login-email').value.trim();if(!/^\S+@\S+\.\S+$/.test(email)){errorOnline('Adresse e-mail invalide.');return}try{await api('/auth/v1/otp','POST',{email,create_user:true});renderCode(email)}catch(e){errorOnline(e.message)}}
+function renderCode(email){showOnline(`<h2>✉ CODE DE CONNEXION</h2><p>Un code a été envoyé à <b>${esc(email)}</b>.</p><label>CODE À 6 CHIFFRES</label><input id="login-code" type="text" inputmode="numeric" maxlength="6" placeholder="123456"><button id="verify-code">VALIDER LE CODE</button><p id="online-error" class="error"></p><button id="back-login" class="alt">RETOUR</button>`);document.getElementById('verify-code').onclick=async()=>{try{const token=document.getElementById('login-code').value.trim();const r=await api('/auth/v1/verify','POST',{email,token,type:'email'});await acceptAuth(r)}catch(e){errorOnline(e.message)}};document.getElementById('back-login').onclick=renderLogin}
+async function acceptAuth(data){if(!data?.access_token||!data?.user)throw Error('Réponse de connexion incomplète.');saveSession({...data,expires_at:Date.now()+(data.expires_in||3600)*1000});await loadProfile();if(profile)await renderRanking();else renderCreateProfile()}
+function renderCreateProfile(){showOnline(`<h2>🌍 CRÉER TON PROFIL</h2><p>Choisis ton pseudo et ton pays. Le pseudo doit être unique. <b>Le pays ne pourra plus être changé.</b></p><label>PSEUDO (3 À 16 CARACTÈRES)</label><input id="new-username" maxlength="16" placeholder="FishMaster" autocomplete="off"><label>PAYS DÉFINITIF</label><select id="new-country">${countries.map(([code,name])=>`<option value="${code}">${name}</option>`).join('')}</select><p class="small">L'identifiant de ton compte reste privé. Seuls ton pseudo, ton pays et ton meilleur score sont publics.</p><button id="create-profile">CONFIRMER MON PROFIL</button><p id="online-error" class="error"></p><button id="logout" class="alt">SE DÉCONNECTER</button>`);
+ document.getElementById('create-profile').onclick=async()=>{const username=document.getElementById('new-username').value.trim(),country=document.getElementById('new-country').value;if(!/^[a-zA-Z0-9_]{3,16}$/.test(username)){errorOnline('3 à 16 caractères : lettres, chiffres et _ uniquement.');return}if(!confirm('Confirmer le pays '+countryName(country)+' ? Il sera définitif.'))return;try{await rpc('create_fishy_profile',{p_username:username,p_country:country});await loadProfile();await renderRanking()}catch(e){errorOnline(e.message.includes('unique')?'Pseudo déjà utilisé. Essaie un autre nom.':e.message)}};
+ document.getElementById('logout').onclick=logout}
+async function renderRanking(){rankingScope=rankingScope==='country'?'country':'world';showOnline(`<h2>🏆 CLASSEMENT</h2><div class="profile">${esc(profile.username)} · ${esc(countryName(profile.country))}<br>Ton record en ligne : <b>${profile.best_score}</b></div><div class="tabs"><button id="rank-world">🌍 MONDIAL</button><button id="rank-country">${esc(profile.country)} MON PAYS</button></div><div id="rank-content"><p>Chargement...</p></div><button id="rank-refresh" class="alt">ACTUALISER</button><button id="logout" class="alt">DÉCONNEXION</button><button id="close-online">RETOUR</button>`);
+ document.getElementById('rank-world').onclick=()=>{rankingScope='world';fetchRanks()};document.getElementById('rank-country').onclick=()=>{rankingScope='country';fetchRanks()};document.getElementById('rank-refresh').onclick=fetchRanks;document.getElementById('logout').onclick=logout;document.getElementById('close-online').onclick=leaveOnline;await fetchRanks()}
+async function fetchRanks(){const target=document.getElementById('rank-content');if(!target)return;target.innerHTML='<p>Chargement...</p>';try{const country=rankingScope==='country'?profile.country:null;const [rows,own]=await Promise.all([rpc('fishy_leaderboard',{p_country:country,p_limit:100}),rpc('fishy_my_rank',{p_country:country})]);const medals=['🥇','🥈','🥉'];target.innerHTML=`<p class="small">TOP 100 ${rankingScope==='world'?'MONDIAL':esc(countryName(profile.country))}</p><table><thead><tr><th>#</th><th>JOUEUR</th><th>SCORE</th></tr></thead><tbody>${(rows||[]).map((r,i)=>`<tr class="${r.username===profile.username?'mine':''}"><td>${medals[i]||r.position}</td><td>${esc(countryName(r.country).split(' ')[0])} ${esc(r.username)}</td><td>${r.best_score}</td></tr>`).join('')||'<tr><td colspan="3">Aucun score</td></tr>'}</tbody></table><p class="profile">TON RANG : <b>${own?.[0]?.position?'#'+own[0].position:'Non classé'}</b> · ${profile.best_score} points</p>`}catch(e){target.innerHTML='<p class="error">'+esc(e.message)+'</p>'}}
+async function logout(){try{if(session)await api('/auth/v1/logout','POST',{})}catch(e){}saveSession(null);profile=null;renderLogin()}
+async function submitRecord(value){if(!configured||!session||!profile||!Number.isSafeInteger(value)||value<=profile.best_score)return;try{await rpc('submit_fishy_score',{p_score:value});profile.best_score=Math.max(profile.best_score,value)}catch(e){console.warn('Score en attente de synchronisation',e.message)}}
+async function googleLogin(){if(!configured)return;const native=!!(window.Capacitor?.isNativePlatform?.());const redirect=native?'com.fishyretro.game://auth/callback':location.origin+location.pathname;
+ const url=endpoint+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(redirect);
+ try{if(native&&window.Capacitor?.Plugins?.Browser)await window.Capacitor.Plugins.Browser.open({url});else location.assign(url)}catch(e){errorOnline('Connexion Google impossible : '+e.message)}}
+async function oauthCallback(url){try{const u=new URL(url),hash=new URLSearchParams(u.hash.slice(1)),query=u.searchParams;if(hash.get('error')||query.get('error'))throw Error(hash.get('error_description')||query.get('error_description')||'Google OAuth');const token=hash.get('access_token'),refreshToken=hash.get('refresh_token');if(!token||!refreshToken)return;const user=await api('/auth/v1/user','GET',null,token);await acceptAuth({access_token:token,refresh_token:refreshToken,user,expires_in:Number(hash.get('expires_in')||3600)});if(window.Capacitor?.Plugins?.Browser)window.Capacitor.Plugins.Browser.close().catch(()=>{});if(!window.Capacitor?.isNativePlatform?.())history.replaceState(null,'',location.pathname)}catch(e){showOnline('<h2>CONNEXION GOOGLE</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}}
+try{window.Capacitor?.Plugins?.App?.addListener('appUrlOpen',({url})=>{if(url?.startsWith('com.fishyretro.game://auth/callback'))oauthCallback(url)})}catch(e){}
+if(location.hash.includes('access_token='))oauthCallback(location.href);
+session=getStored();
+// Propose profile creation on first launch when online mode is configured.
+if(configured&&!session){let dismissed=false;try{dismissed=localStorage.getItem('fishy-v8-welcome-dismissed')==='1'}catch(e){}if(!dismissed)setTimeout(()=>{if(state==='ready'&&!modal.classList.contains('show')){onlineFrom='ready';renderLogin();const back=document.getElementById('close-online');back.textContent='JOUER SANS COMPTE';back.onclick=()=>{try{localStorage.setItem('fishy-v8-welcome-dismissed','1')}catch(e){}leaveOnline()}}},250)}
+
+requestAnimationFrame(loop);
+})();
+</script></body></html>

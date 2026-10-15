@@ -1,0 +1,21 @@
+{
+  "name": "fishy-retro",
+  "version": "8.0.0",
+  "private": true,
+  "description": "FISHY! RETRO V8 - Supabase leaderboard and recoverable accounts",
+  "scripts": {
+    "android:init": "cap add android",
+    "android:sync": "cap sync android",
+    "android:brand": "python3 scripts/prepare_android.py",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.0",
+    "@capacitor/core": "^7.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.0"
+  }
+}

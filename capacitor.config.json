@@ -1,0 +1,7 @@
+{
+  "appId": "com.fishyretro.game",
+  "appName": "Fishy! Retro",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "backgroundColor": "#48B9E0" }
+}

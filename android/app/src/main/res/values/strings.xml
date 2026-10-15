@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fishy! Retro</string>
+    <string name="title_activity_main">Fishy! Retro</string>
+    <string name="package_name">com.fishyretro.game</string>
+    <string name="custom_url_scheme">com.fishyretro.game</string>
+</resources>
