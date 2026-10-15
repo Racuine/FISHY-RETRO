@@ -67,7 +67,35 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug bundleRelease
+
+          ./gradlew --no-daemon assembleDebug bundleRelease --stacktrace || {
+            echo "===== MANIFEST FILES ====="
+
+            find app/build/intermediates -name "AndroidManifest.xml" \
+              -type f -print -exec head -n 15 {} \; || true
+
+            echo "===== INVALID XML FILES ====="
+
+            python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          files = glob.glob(
+              "app/build/intermediates/**/AndroidManifest.xml",
+              recursive=True
+          )
+
+          for file in files:
+              try:
+                  ET.parse(file)
+                  print("OK:", file)
+              except ET.ParseError as e:
+                  print("INVALID:", file)
+                  print("ERROR:", e)
+          PY
+
+            exit 1
+          }
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
