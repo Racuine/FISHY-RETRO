@@ -450,27 +450,27 @@ const skinKey=()=>session?.user?.id?'fishy-v5-skins-'+session.user.id:'fishy-v5-
 const selectKey=()=>session?.user?.id?'fishy-v5-selected-'+session.user.id:'fishy-retro-selected';
 let ownedSkins=new Set(),shopTab='coins',shopBusy=false;
 function loadSkinsLocal(){try{ownedSkins=new Set(JSON.parse(localStorage.getItem(skinKey())||'[]'))}catch(e){ownedSkins=new Set()}}
-function ownsSkin(i){return i<10?best>=collection[i].need:collection[i]?.kind==='coins'&&ownedSkins.has(i)}
+function ownsSkin(i){return i<10?best>=collection[i].need:(collection[i]?.kind==='coins'||collection[i]?.kind==='premium')&&ownedSkins.has(i)}
 function saveOwned(){try{localStorage.setItem(skinKey(),JSON.stringify([...ownedSkins]))}catch(e){}}
 function restoreSkinScope(){loadSkinsLocal();try{selected=Number(localStorage.getItem(selectKey()))||0}catch(e){selected=0}if(!collection[selected]||!ownsSkin(selected))selected=0}
 function selectSkin(i){if(!ownsSkin(i))return;selected=i;saveSelection();try{localStorage.setItem(selectKey(),String(i))}catch(e){}sfx('point');renderShop()}
 function shopPreview(canvas,i){const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,96,64);const f=collection[i];const r=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h)};r(20,24,49,24,f.body);r(27,28,38,16,f.light);r(5,24,18,9,f.fin);r(5,39,18,8,f.fin);r(40,17,16,8,f.accent);r(57,30,8,8,f.redEye?'#ff4d65':'#17354a');r(60,31,2,2,'#fff');r(68,42,9,4,f.fin);if(f.stripe)r(42,25,5,22,'#fff');if(f.cosmic){r(33,33,4,4,'#fff');r(48,40,3,3,'#ffe58a')}}
-function openShop(){onlineFrom=state;shopTab='coins';renderShop();if(session)void refreshShopWallet()}
+function openShop(){onlineFrom=state;shopTab='coins';renderShop();if(session){void refreshShopWallet();void restorePremiumPurchases(true)}}
 async function refreshShopWallet(){try{await loadCoinWallet();await loadShopOwned();if(modal.classList.contains('show')&&document.getElementById('shop-grid'))renderShop()}catch(e){console.warn('Boutique:',e.message)}}
-async function loadShopOwned(){if(!session)return;const id=session.user.id;const rows=await rpc('fishy_owned_skins');if(session?.user?.id!==id)return;ownedSkins=new Set((rows||[]).map(x=>Number(x.skin_id)));saveOwned();if(!ownsSkin(selected)){selected=0;saveSelection()}}
+async function loadShopOwned(){if(!session)return;const id=session.user.id;const rows=await rpc('fishy_owned_skins');if(session?.user?.id!==id)return;const premiumRows=await rpc('fishy_premium_owned');ownedSkins=new Set([...(rows||[]),...(premiumRows||[])].map(x=>Number(x.skin_id)));saveOwned();if(!ownsSkin(selected)){selected=0;saveSelection()}}
 function renderShop(){
          const items=collection.map((f,i)=>({...f,i})).filter(f=>f.kind===shopTab);
-         showOnline(`<h2>🐟 BOUTIQUE FISHY!</h2><div class="profile">🪙 SOLDE : <b>${coins}</b> pièces ${coinSync==='error'?'(sync en attente)':''}</div><div class="shop-tab"><button id="tab-coins" class="${shopTab==='coins'?'':'alt'}">🪙 PIÈCES</button><button id="tab-premium" class="${shopTab==='premium'?'':'alt'}">💎 PRESTIGE</button></div><p class="small">${shopTab==='coins'?'Achète des poissons avec les pièces gagnées en jouant.':'Aperçu des skins premium : achats réels indisponibles avant Google Play Billing.'}</p><div id="shop-grid" class="shop-grid">${items.map(f=>`<div class="shop-item"><canvas width="96" height="64" data-skin="${f.i}"></canvas><strong>${esc(f.name)}</strong><div class="small">${f.kind==='coins'?'🪙 '+f.price+' pièces':f.eur+' €'}</div><button data-buy="${f.i}" ${shopBusy?'disabled':''}>${f.kind==='premium'?'BIENTÔT':ownedSkins.has(f.i)?selected===f.i?'ÉQUIPÉ':'ÉQUIPER':'ACHETER'}</button></div>`).join('')}</div><p id="online-error" class="error" role="alert"></p><button id="shop-collection" class="alt">POISSONS À DÉBLOQUER (RECORD)</button><button id="shop-back" class="alt">RETOUR</button>`);
+         showOnline(`<h2>🐟 BOUTIQUE FISHY!</h2><div class="profile">🪙 SOLDE : <b>${coins}</b> pièces ${coinSync==='error'?'(sync en attente)':''}</div><div class="shop-tab"><button id="tab-coins" class="${shopTab==='coins'?'':'alt'}">🪙 PIÈCES</button><button id="tab-premium" class="${shopTab==='premium'?'':'alt'}">💎 PRESTIGE</button></div><p class="small">${shopTab==='coins'?'Achète des poissons avec les pièces gagnées en jouant.':'Achats uniques via Google Play. Connexion obligatoire. Les prix définitifs sont affichés par Google Play.'}</p><div id="shop-grid" class="shop-grid">${items.map(f=>`<div class="shop-item"><canvas width="96" height="64" data-skin="${f.i}"></canvas><strong>${esc(f.name)}</strong><div class="small">${f.kind==='coins'?'🪙 '+f.price+' pièces':f.eur+' €'}</div><button data-buy="${f.i}" ${shopBusy?'disabled':''}>${ownedSkins.has(f.i)?selected===f.i?'ÉQUIPÉ':'ÉQUIPER':f.kind==='premium'?'ACHETER €':'ACHETER'}</button></div>`).join('')}</div><p id="online-error" class="error" role="alert"></p><button id="shop-collection" class="alt">POISSONS À DÉBLOQUER (RECORD)</button><button id="shop-restore" class="alt">RESTAURER MES ACHATS</button><button id="shop-back" class="alt">RETOUR</button>`);
          document.querySelectorAll('[data-skin]').forEach(el=>shopPreview(el,Number(el.dataset.skin)));
          document.getElementById('tab-coins').onclick=()=>{shopTab='coins';renderShop()};
          document.getElementById('tab-premium').onclick=()=>{shopTab='premium';renderShop()};
          document.querySelectorAll('[data-buy]').forEach(el=>el.onclick=()=>buySkin(Number(el.dataset.buy)));
          document.getElementById('shop-collection').onclick=()=>{closeOnline();state='collection';collectionPage=0};
-         document.getElementById('shop-back').onclick=leaveOnline;
+         document.getElementById('shop-back').onclick=leaveOnline;document.getElementById('shop-restore').onclick=()=>restorePremiumPurchases();
 }
 async function buySkin(i){
          const f=collection[i];if(!f||shopBusy)return;
-         if(f.kind==='premium'){errorOnline('Les achats réels seront activés après intégration de Google Play Billing.');return}
+         if(f.kind==='premium'){await buyPremiumSkin(i);return}
          if(f.kind!=='coins')return;
          if(ownedSkins.has(i)){selectSkin(i);return}
          if(coins<f.price){errorOnline('Pas assez de pièces !');return}
@@ -486,6 +486,42 @@ async function buySkin(i){
          shopBusy=false;renderShop();
 }
 
+// Google Play Billing: the native purchase token is verified server-side before unlocking.
+const PREMIUM_IDS={20:'fishy_bronze',21:'fishy_silver',22:'fishy_gold',23:'fishy_platinum',24:'fishy_emerald',25:'fishy_ruby',26:'fishy_sapphire',27:'fishy_amethyst',28:'fishy_diamond',29:'fishy_black_diamond'};
+const billing=()=>window.Capacitor?.Plugins?.FishyBilling;
+async function verifyPremiumPurchase(purchase){
+ if(!session)throw Error('Connecte-toi avant de valider un achat.');
+ await refresh();
+ if(!session)throw Error('Session expirée, reconnecte-toi.');
+ const r=await fetch(endpoint+'/functions/v1/verify-fishy-purchase',{method:'POST',headers:{'apikey':anon,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({productId:purchase.productId,purchaseToken:purchase.purchaseToken})});
+ const data=await r.json().catch(()=>({}));
+ if(!r.ok||!data.ok)throw Error(data.error||'Vérification Google Play impossible');
+ await loadShopOwned();
+ return data;
+}
+async function buyPremiumSkin(i){
+ if(shopBusy)return;
+ if(ownedSkins.has(i)){selectSkin(i);return}
+ if(!session||!profile){errorOnline('Connecte-toi via CLASSEMENT avant un achat réel.');return}
+ if(!billing()){errorOnline('Les achats Google Play sont disponibles uniquement dans l’application Android.');return}
+ const productId=PREMIUM_IDS[i];if(!productId)return;
+ shopBusy=true;renderShop();
+ try{
+  const purchase=await billing().purchase({productId});
+  if(purchase.pending){errorOnline('Paiement en attente : le poisson sera débloqué après validation.');return}
+  await verifyPremiumPurchase(purchase);
+  selected=i;saveSelection();localStorage.setItem(selectKey(),String(i));sfx('unlock');
+ }catch(e){errorOnline(e.message||String(e));}
+ finally{shopBusy=false;renderShop()}
+}
+async function restorePremiumPurchases(silent=false){
+ if(!session||!billing())return;
+ try{
+  const result=await billing().restorePurchases();
+  for(const p of result.purchases||[]){if(PREMIUM_IDS[Object.keys(PREMIUM_IDS).find(k=>PREMIUM_IDS[k]===p.productId)]&&p.purchaseToken){try{await verifyPremiumPurchase(p)}catch(e){console.warn('Restauration achat:',e.message)}}}
+  await loadShopOwned();if(document.getElementById('shop-grid'))renderShop();
+ }catch(e){if(!silent)errorOnline('Restauration impossible : '+e.message)}
+}
 const pendingKey=id=>'fishy-v5-pending-'+id;
 function getPendingCoins(id){try{const rows=JSON.parse(localStorage.getItem(pendingKey(id))||'[]');return Array.isArray(rows)?rows:[]}catch(e){return []}}
 function queueCoinReward(id,uuid,value){

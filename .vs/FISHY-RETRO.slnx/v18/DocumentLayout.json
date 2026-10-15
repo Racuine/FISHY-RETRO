@@ -1,0 +1,130 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Android\\FISHY-RETRO\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Android\\FISHY-RETRO\\www\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:www\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Android\\FISHY-RETRO\\README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Android\\FISHY-RETRO\\scripts\\prepare_android.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:scripts\\prepare_android.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Android\\FISHY-RETRO\\www\\config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:www\\config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Android\\FISHY-RETRO\\.github\\workflows\\android.yml||{06C066C6-04A2-4E5D-8202-439FD4234EF1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.github\\workflows\\android.yml||{06C066C6-04A2-4E5D-8202-439FD4234EF1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Android\\FISHY-RETRO\\android\\app\\src\\main\\AndroidManifest.xml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:android\\app\\src\\main\\AndroidManifest.xml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "README.md",
+              "DocumentMoniker": "C:\\Android\\FISHY-RETRO\\README.md",
+              "RelativeDocumentMoniker": "README.md",
+              "ToolTip": "C:\\Android\\FISHY-RETRO\\README.md",
+              "RelativeToolTip": "README.md",
+              "ViewState": "AgIAAAIAAAAAAAAAAADwvxAAAAA9AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-10-15T10:00:46.04Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Android\\FISHY-RETRO\\www\\index.html",
+              "RelativeDocumentMoniker": "www\\index.html",
+              "ToolTip": "C:\\Android\\FISHY-RETRO\\www\\index.html",
+              "RelativeToolTip": "www\\index.html",
+              "ViewState": "AgIAAGcCAAAAAAAAAAAYwIcCAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-10-15T09:56:58.307Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "config.js",
+              "DocumentMoniker": "C:\\Android\\FISHY-RETRO\\www\\config.js",
+              "RelativeDocumentMoniker": "www\\config.js",
+              "ToolTip": "C:\\Android\\FISHY-RETRO\\www\\config.js",
+              "RelativeToolTip": "www\\config.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-10-15T09:46:54.894Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "prepare_android.py",
+              "DocumentMoniker": "C:\\Android\\FISHY-RETRO\\scripts\\prepare_android.py",
+              "RelativeDocumentMoniker": "scripts\\prepare_android.py",
+              "ToolTip": "C:\\Android\\FISHY-RETRO\\scripts\\prepare_android.py",
+              "RelativeToolTip": "scripts\\prepare_android.py",
+              "ViewState": "AgIAACEBAAAAAAAAAAAAwDABAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-10-15T09:27:30.596Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AndroidManifest.xml",
+              "DocumentMoniker": "C:\\Android\\FISHY-RETRO\\android\\app\\src\\main\\AndroidManifest.xml",
+              "RelativeDocumentMoniker": "android\\app\\src\\main\\AndroidManifest.xml",
+              "ToolTip": "C:\\Android\\FISHY-RETRO\\android\\app\\src\\main\\AndroidManifest.xml",
+              "RelativeToolTip": "android\\app\\src\\main\\AndroidManifest.xml",
+              "ViewState": "AgIAABQAAAAAAAAAAAAuwDIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003576|",
+              "WhenOpened": "2026-10-15T09:20:57.69Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "android.yml",
+              "DocumentMoniker": "C:\\Android\\FISHY-RETRO\\.github\\workflows\\android.yml",
+              "RelativeDocumentMoniker": ".github\\workflows\\android.yml",
+              "ToolTip": "C:\\Android\\FISHY-RETRO\\.github\\workflows\\android.yml",
+              "RelativeToolTip": ".github\\workflows\\android.yml",
+              "ViewState": "AgIAADAAAAAAAAAAAAAcwD8AAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
+              "WhenOpened": "2026-10-15T09:16:14.873Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

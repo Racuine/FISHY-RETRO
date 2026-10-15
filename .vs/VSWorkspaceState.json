@@ -1,7 +1,13 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\.github",
+    "\\.github\\workflows",
+    "\\android\\app",
+    "\\android\\app\\src",
+    "\\android\\app\\src\\main",
+    "\\www"
   ],
-  "SelectedNode": "\\FISHY-RETRO",
+  "SelectedNode": "\\www\\index.html",
   "PreviewInSolutionExplorer": false
 }
