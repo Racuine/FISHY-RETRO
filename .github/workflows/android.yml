@@ -33,6 +33,19 @@ jobs:
         run: node node_modules/@capacitor/cli/bin/capacitor sync android
       - name: Apply branding and fullscreen
         run: python3 scripts/prepare_android.py
+      - name: Verify Android Manifest
+        run: |
+          echo "===== AndroidManifest.xml ====="
+          cat android/app/src/main/AndroidManifest.xml
+
+          echo "===== XML validation ====="
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          path = "android/app/src/main/AndroidManifest.xml"
+          ET.parse(path)
+          print("AndroidManifest.xml is valid!")
+          PY
       - name: Configure release signing (optional)
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
