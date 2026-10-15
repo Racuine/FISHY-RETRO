@@ -220,12 +220,14 @@ const c=document.getElementById('game'),g=c.getContext('2d',{alpha:false});g.ima
 const W=288,H=480,floor=446,fishX=75,fishR=11;
 let state='ready',fishY=210,vy=0,score=0,best=0,frame=0,last=0,spawn=0,obstacles=[],bubbles=[],flash=0;
 let muted=false,ac=null,nextBeat=0,beat=0;
-// V5 economy: 1 coin per 10 points, credited once per finished run.
+// V7 economy: 1 coin per 10 points; connected rewards require server-created runs.
 let localCoins=0,coins=0,runCoins=0,coinSync='ready';
 try{localCoins=Math.max(0,Math.floor(Number(localStorage.getItem('fishy-retro-local-coins'))||0))}catch(e){}
 coins=localCoins;
 const newRunId=()=>globalThis.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.floor(Math.random()*16);return(c==='x'?r:(r&3|8)).toString(16)});
 let runId=newRunId();
+// A connected run is registered server-side before it can earn coins.
+let serverRunPromise=null;
 
 const collection=[
 {name:'FISHY CLASSIC',need:0,body:'#ffbb4b',light:'#ffd36e',fin:'#ff8b4b',accent:'#f19b43'},
@@ -278,7 +280,14 @@ function startMusic(){if(!audio())return;nextBeat=ac.currentTime+.03;beat=0}
 function sfx(kind){if(kind==='swim')tone(440,.055,'square',.016);else if(kind==='point'){tone(660,.09,'square',.035);tone(880,.11,'square',.025,ac?ac.currentTime+.09:undefined)}else if(kind==='die'){tone(170,.24,'sawtooth',.04)}else if(kind==='pause')tone(350,.08,'triangle',.02);else if(kind==='record'){const a=audio();if(a){const t=a.currentTime+.02;[659,880,1047].forEach((f,i)=>tone(f,.12,'triangle',.025,t+i*.09))}}else if(kind==='unlock'){const a=audio();if(a){const t=a.currentTime+.02;[523,659,784,1047].forEach((f,i)=>tone(f,.17,'square',.025,t+i*.105))}}}
 function rnd(a,b){return a+Math.random()*(b-a)}
 function reset(){runCoins=0;coinSync='ready';runId=newRunId();unlockToast=-1;unlockTimer=0;unlockBurst=[];swimParticles=[];recordToast=0;recordCelebrated=false;state='ready';fishY=210;vy=0;score=0;frame=0;spawn=0;obstacles=[];bubbles=[];flash=0}
-function begin(){reset();runStartBest=best;newUnlock=-1;state='play';vy=-3.9;startMusic();sfx('swim')}
+function begin(){
+         reset();runStartBest=best;newUnlock=-1;state='play';vy=-3.9;startMusic();sfx('swim');
+         serverRunPromise=null;
+         if(session&&configured){
+          const id=session.user.id,rid=runId;
+          serverRunPromise=rpc('fishy_start_run',{p_run_id:rid}).then(()=>true).catch(e=>{console.warn('Partie non validée côté serveur :',e.message);return false});
+         }
+}
 function pause(){if(state==='play'){state='paused';sfx('pause')}else if(state==='paused'){state='play';startMusic();sfx('pause')}}
 function openHelp(from){helpFrom=from;state='help'}
 function tap(x,y){
@@ -358,8 +367,14 @@ function die(){
           coinSync='ready';
          }else if(runCoins>0){
           coinSync='pending';
-          queueCoinReward(session.user.id,runId,score);
-          void syncCoinRewards(session.user.id);
+          const id=session.user.id,rid=runId,finalScore=score,registration=serverRunPromise;
+          // Wait for the server to register the run, then submit its completion once.
+          void (async()=>{
+           const registered=registration?await registration:false;
+           if(!registered||session?.user?.id!==id){coinSync='error';return}
+           queueCoinReward(id,rid,finalScore);
+           await syncCoinRewards(id);
+          })();
          }
          submitRecord(score);
 }
@@ -493,8 +508,8 @@ async function syncCoinRewards(id){
           let rows=getPendingCoins(id);
           for(const reward of rows){
            if(!session||session.user.id!==id)break;
-           // RPC uses auth.uid(), UUID idempotency, and a single DB transaction.
-           const total=await rpc('fishy_award_run_coins',{p_run_id:reward.id,p_score:reward.score});
+           // RPC checks server-created run, elapsed time, ownership, and idempotency.
+           const total=await rpc('fishy_finish_run',{p_run_id:reward.id,p_score:reward.score});
            if(session?.user?.id===id){
             coins=Math.max(0,Number(total)||0);
             rows=getPendingCoins(id).filter(x=>x.id!==reward.id);
