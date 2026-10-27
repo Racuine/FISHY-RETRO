@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ============================================
+      # 1. SETUP
+      # ============================================
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -32,6 +36,10 @@ jobs:
         with:
           packages: platform-tools
 
+      # ============================================
+      # 2. INSTALL & PREPARE
+      # ============================================
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
@@ -48,6 +56,10 @@ jobs:
 
       - name: Apply branding and fullscreen
         run: python3 scripts/prepare_android.py
+
+      # ============================================
+      # 3. ANDROID MANIFEST
+      # ============================================
 
       - name: Fix Android Manifest XML
         run: |
@@ -77,9 +89,14 @@ jobs:
 
           python3 - <<'PY'
           import xml.etree.ElementTree as ET
+
           ET.parse("android/app/src/main/AndroidManifest.xml")
           print("AndroidManifest.xml is valid!")
           PY
+
+      # ============================================
+      # 4. SIGNING CONFIGURATION
+      # ============================================
 
       - name: Validate signing secrets
         env:
@@ -123,6 +140,10 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: python3 scripts/signing.py
 
+      # ============================================
+      # 5. BUILD ANDROID
+      # ============================================
+
       - name: Build APK and signed AAB
         working-directory: android
         env:
@@ -134,6 +155,10 @@ jobs:
 
           ./gradlew --no-daemon assembleDebug bundleRelease --stacktrace
 
+      # ============================================
+      # 6. VERIFY RELEASE SIGNATURE
+      # ============================================
+
       - name: Verify AAB signature
         run: |
           AAB="android/app/build/outputs/bundle/release/app-release.aab"
@@ -143,9 +168,26 @@ jobs:
             exit 1
           fi
 
-          jarsigner -verify -strict "$AAB"
+          echo "Verifying Android App Bundle signature..."
+
+          if ! jarsigner -verify "$AAB" > verification.log 2>&1; then
+            cat verification.log
+            echo "::error::AAB signature verification failed!"
+            exit 1
+          fi
+
+          cat verification.log
+
+          if ! grep -q "^jar verified" verification.log; then
+            echo "::error::AAB is not correctly signed!"
+            exit 1
+          fi
 
           echo "AAB signature verified successfully!"
+
+      # ============================================
+      # 7. UPLOAD ARTIFACTS
+      # ============================================
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
