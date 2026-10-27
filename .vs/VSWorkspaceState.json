@@ -3,11 +3,11 @@
     "",
     "\\.github",
     "\\.github\\workflows",
+    "\\android",
     "\\android\\app",
     "\\android\\app\\src",
-    "\\android\\app\\src\\main",
-    "\\www"
+    "\\assets\\xxxhdpi"
   ],
-  "SelectedNode": "\\www\\index.html",
+  "SelectedNode": "\\assets",
   "PreviewInSolutionExplorer": false
 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -378,7 +378,7 @@ function die(){
          }
          submitRecord(score);
 }
-function medal(n){return n>=250?['DIAMANT','#b5faff']:n>=100?['OR','#ffe08b']:n>=30?['ARGENT','#e4edf4']:n>=10?['BRONZE','#f4b27a']:['DEBUTANT','#b4e6e4']}
+function medal(n){return n>=250?['DIAMOND','#b5faff']:n>=100?['OR','#ffe08b']:n>=30?['SILVER','#e4edf4']:n>=10?['BRONZE','#f4b27a']:['BEGINNER','#b4e6e4']}
 function update(dt){if(state==='paused')return;frame+=dt;flash=Math.max(0,flash-dt);recordToast=Math.max(0,recordToast-dt);for(const p of swimParticles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}swimParticles=swimParticles.filter(p=>p.life>0);if(unlockTimer>0){unlockTimer=Math.max(0,unlockTimer-dt);for(const p of unlockBurst){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.025*dt;p.life-=dt}unlockBurst=unlockBurst.filter(p=>p.life>0);if(unlockTimer===0)unlockToast=-1;}
 if(bubbles.length<35&&Math.random()<.14*dt)bubbles.push({x:rnd(8,280),y:480,r:rnd(1,3),v:rnd(.35,.95)});
 for(const b of bubbles)b.y-=b.v*dt;bubbles=bubbles.filter(b=>b.y>-8);
@@ -403,38 +403,38 @@ if(state==='play'||state==='paused'){text(String(score),W/2,54,30,'#fff6d7');pan
 if(state==='play'||state==='paused'||state==='ready'){panel(W-42,7,36,32);text(muted?'X':'♪',W-24,29,16,'#fff6d7')}
 if(state==='ready'){
                  panel(19,73,250,138);text('FISHY!',W/2,124,32,'#ffe08b');text('RETRO OCEAN',W/2,150,13,'#b4e6e4');drawFishSprite(W/2,179,selected,1.5);
-                 btn(36,225,216,54,'JOUER');btn(36,291,216,48,'COLLECTION '+unlockedCount()+'/10','#b4e6e4');btn(36,349,216,46,'BOUTIQUE  /  SKINS','#ffffff');
-                 btn(36,399,216,42,'CLASSEMENT MONDIAL','#a5f1bd');text('RECORD '+best,W/2,464,11,'#ffe08b');text('PIECES '+coins,W/2,61,12,'#ffe58a');panel(6,7,36,32);text('?',24,29,18,'#fff6d7')
+                 btn(36,225,216,54,'PLAY');btn(36,291,216,48,'COLLECTION '+unlockedCount()+'/10','#b4e6e4');btn(36,349,216,46,'SKIN SHOP','#ffffff');
+                 btn(36,399,216,42,'WORLD LEADERBOARD','#a5f1bd');text('BEST '+best,W/2,464,11,'#ffe08b');text('COINS '+coins,W/2,61,12,'#ffe58a');panel(6,7,36,32);text('?',24,29,18,'#fff6d7')
 }
 if(state==='paused'){
-                 panel(22,124,244,240);text('PAUSE',W/2,165,27,'#ffe08b');
-                 btn(40,188,208,52,'REPRENDRE');btn(40,247,208,46,'MENU PRINCIPAL','#b4e6e4');btn(40,300,208,45,'AIDE','#ffffff')
+                 panel(22,124,244,240);text('PAUSED',W/2,165,27,'#ffe08b');
+                 btn(40,188,208,52,'RESUME');btn(40,247,208,46,'MAIN MENU','#b4e6e4');btn(40,300,208,45,'HELP','#ffffff')
 }
 if(state==='dead'){
-                 panel(22,104,244,207);text('PARTIE TERMINEE',W/2,139,19,'#ffe08b');text('SCORE '+score,W/2,178,20);
-                 text('RECORD '+best,W/2,188,13,'#b4e6e4');const m=medal(score);text('MEDAILLE '+m[0],W/2,215,13,m[1]);
-                 if(score>=runStartBest&&score>0)text('BIEN JOUE !',W/2,236,12,'#a5f1bd');
-                 if(newUnlock>=0)text('DEBLOQUE : '+collection[newUnlock].name,W/2,253,10,'#ffe08b');
-                 text('+'+runCoins+' PIECE'+(runCoins>1?'S':''),W/2,278,17,'#ffe58a');
-                 text('SOLDE : '+coins+' PIECES'+(coinSync==='pending'?' (SYNC...)':coinSync==='error'?' (A SYNC)':''),W/2,298,10,'#b4e6e4');
-                 btn(40,319,208,44,'REJOUER');btn(40,374,208,46,'BOUTIQUE  /  SKINS','#b4e6e4');btn(40,427,208,40,'CLASSEMENT','#a5f1bd')
+                 panel(22,104,244,207);text('GAME OVER',W/2,139,19,'#ffe08b');text('SCORE '+score,W/2,178,20);
+                 text('BEST '+best,W/2,188,13,'#b4e6e4');const m=medal(score);text('MEDAL '+m[0],W/2,215,13,m[1]);
+                 if(score>=runStartBest&&score>0)text('WELL DONE!',W/2,236,12,'#a5f1bd');
+                 if(newUnlock>=0)text('UNLOCKED:  '+collection[newUnlock].name,W/2,253,10,'#ffe08b');
+                 text('+'+runCoins+' COIN'+(runCoins!==1?'S':''),W/2,278,17,'#ffe58a');
+                 text('BALANCE: '+coins+' COINS'+(coinSync==='pending'?' (SYNC...)':coinSync==='error'?' (A SYNC)':''),W/2,298,10,'#b4e6e4');
+                 btn(40,319,208,44,'PLAY AGAIN');btn(40,374,208,46,'SKIN SHOP','#b4e6e4');btn(40,427,208,40,'LEADERBOARD','#a5f1bd')
 }
 if(state==='help'){
-                 panel(18,79,252,337);text('COMMENT JOUER',W/2,116,21,'#ffe08b');
-                 text('TOUCHE L ECRAN',W/2,163,15);text('POUR FAIRE MONTER',W/2,185,13,'#b4e6e4');text('TON POISSON',W/2,205,13,'#b4e6e4');
-                 text('EVITE LES ALGUES',W/2,250,15,'#ffe08b');text('ET BATS TON RECORD',W/2,275,12);
-                 text('DEBLOQUE 10 POISSONS !',W/2,317,12,'#b4e6e4');
-                 btn(39,347,210,52,helpFrom==='ready'?'C EST PARTI !':'RETOUR')
+                 panel(18,79,252,337);text('HOW TO PLAY',W/2,116,21,'#ffe08b');
+                 text('TAP THE SCREEN',W/2,163,15);text('TO SWIM UP',W/2,185,13,'#b4e6e4');text('YOUR FISH',W/2,205,13,'#b4e6e4');
+                 text('AVOID SEAWEED',W/2,250,15,'#ffe08b');text('BEAT YOUR RECORD',W/2,275,12);
+                 text('UNLOCK 10 FISH!',W/2,317,12,'#b4e6e4');
+                 btn(39,347,210,52,helpFrom==='ready'?'START!':'BACK')
 }
 if(state==='collection'){
-                 panel(10,12,268,445);text('COLLECTION',W/2,42,24,'#ffe08b');text('RETOUR',40,69,12);text('RECORD '+best,W-52,69,12,'#ffe08b');
+                 panel(10,12,268,445);text('COLLECTION',W/2,42,24,'#ffe08b');text('BACK',40,69,12);text('BEST '+best,W-52,69,12,'#ffe08b');
                  for(let i=0;i<6;i++){const idx=collectionPage*6+i;if(idx>=10)continue;const f=collection[idx],col=i%2,row=Math.floor(i/2),x=17+col*128,y=91+row*91,ok=best>=f.need;
                  panel(x,y,122,84);if(idx===selected){rect(x+3,y+3,116,3,'#ffe08b');rect(x+3,y+78,116,3,'#ffe08b')}
                  if(ok)drawFishSprite(x+61,y+26,idx,1.35);else{rect(x+41,y+15,39,24,'#17354a');text('?',x+61,y+34,19,'#7694a0')}
-                 text(f.name,x+61,y+57,idx===0?10:9,ok?'#fff6d7':'#a0b8bf');text(ok?(idx===selected?'SELECTIONNE':'CHOISIR'):'RECORD '+f.need,x+61,y+74,10,ok?'#a5f1bd':'#a0b8bf')}
-                 panel(34,386,220,42);text(collectionPage===0?'SUIVANTS  >':'<  PRECEDENTS',W/2,413,15,'#ffe08b')}
-if(recordToast>0&&state==='play'&&unlockToast<0){const alpha=Math.min(1,recordToast/14,(90-recordToast)/10);g.save();g.globalAlpha=Math.max(0,alpha);panel(81,70,126,31);text('NOUVEAU RECORD !',W/2,91,10,'#ffe08b');g.restore()}
-if(unlockToast>=0&&unlockTimer>0&&(state==='play'||state==='dead'||state==='paused')){const i=unlockToast,progress=Math.min(1,(145-unlockTimer)/12,unlockTimer/16),yy=Math.round(-10*(1-progress));g.save();g.globalAlpha=Math.max(0,progress);panel(42,66+yy,204,47);rect(46,70+yy,196,2,'#ffe58a');drawFishSprite(67,91+yy,i,.82);text('POISSON DEBLOQUE !',163,84+yy,10,'#ffe58a');text(collection[i].name,163,101+yy,11,'#ffffff');for(const p of unlockBurst)rect(p.x,p.y+yy,2,2,p.color);g.restore()}
+                 text(f.name,x+61,y+57,idx===0?10:9,ok?'#fff6d7':'#a0b8bf');text(ok?(idx===selected?'EQUIPPED':'SELECT'):'BEST '+f.need,x+61,y+74,10,ok?'#a5f1bd':'#a0b8bf')}
+                 panel(34,386,220,42);text(collectionPage===0?'NEXT  >':'<  PREVIOUS',W/2,413,15,'#ffe08b')}
+if(recordToast>0&&state==='play'&&unlockToast<0){const alpha=Math.min(1,recordToast/14,(90-recordToast)/10);g.save();g.globalAlpha=Math.max(0,alpha);panel(81,70,126,31);text('NEW RECORD!',W/2,91,10,'#ffe08b');g.restore()}
+if(unlockToast>=0&&unlockTimer>0&&(state==='play'||state==='dead'||state==='paused')){const i=unlockToast,progress=Math.min(1,(145-unlockTimer)/12,unlockTimer/16),yy=Math.round(-10*(1-progress));g.save();g.globalAlpha=Math.max(0,progress);panel(42,66+yy,204,47);rect(46,70+yy,196,2,'#ffe58a');drawFishSprite(67,91+yy,i,.82);text('FISH UNLOCKED!',163,84+yy,10,'#ffe58a');text(collection[i].name,163,101+yy,11,'#ffffff');for(const p of unlockBurst)rect(p.x,p.y+yy,2,2,p.color);g.restore()}
 if(flash>0){g.fillStyle=`rgba(255,255,255,${flash/40})`;g.fillRect(0,0,W,H)}}
 function loop(now){const dt=Math.min(2.2,(now-last)/16.666||1);last=now;update(dt);draw();requestAnimationFrame(loop)}
 
@@ -460,7 +460,7 @@ async function refreshShopWallet(){try{await loadCoinWallet();await loadShopOwne
 async function loadShopOwned(){if(!session)return;const id=session.user.id;const rows=await rpc('fishy_owned_skins');if(session?.user?.id!==id)return;const premiumRows=await rpc('fishy_premium_owned');ownedSkins=new Set([...(rows||[]),...(premiumRows||[])].map(x=>Number(x.skin_id)));saveOwned();if(!ownsSkin(selected)){selected=0;saveSelection()}}
 function renderShop(){
          const items=collection.map((f,i)=>({...f,i})).filter(f=>f.kind===shopTab);
-         showOnline(`<h2>🐟 BOUTIQUE FISHY!</h2><div class="profile">🪙 SOLDE : <b>${coins}</b> pièces ${coinSync==='error'?'(sync en attente)':''}</div><div class="shop-tab"><button id="tab-coins" class="${shopTab==='coins'?'':'alt'}">🪙 PIÈCES</button><button id="tab-premium" class="${shopTab==='premium'?'':'alt'}">💎 PRESTIGE</button></div><p class="small">${shopTab==='coins'?'Achète des poissons avec les pièces gagnées en jouant.':'Achats uniques via Google Play. Connexion obligatoire. Les prix définitifs sont affichés par Google Play.'}</p><div id="shop-grid" class="shop-grid">${items.map(f=>`<div class="shop-item"><canvas width="96" height="64" data-skin="${f.i}"></canvas><strong>${esc(f.name)}</strong><div class="small">${f.kind==='coins'?'🪙 '+f.price+' pièces':f.eur+' €'}</div><button data-buy="${f.i}" ${shopBusy?'disabled':''}>${ownedSkins.has(f.i)?selected===f.i?'ÉQUIPÉ':'ÉQUIPER':f.kind==='premium'?'ACHETER €':'ACHETER'}</button></div>`).join('')}</div><p id="online-error" class="error" role="alert"></p><button id="shop-collection" class="alt">POISSONS À DÉBLOQUER (RECORD)</button><button id="shop-restore" class="alt">RESTAURER MES ACHATS</button><button id="shop-back" class="alt">RETOUR</button>`);
+         showOnline(`<h2>🐟 FISHY! SHOP</h2><div class="profile">🪙 BALANCE: <b>${coins}</b> coins ${coinSync==='error'?'(sync pending)':''}</div><div class="shop-tab"><button id="tab-coins" class="${shopTab==='coins'?'':'alt'}">🪙 PIÈCES</button><button id="tab-premium" class="${shopTab==='premium'?'':'alt'}">💎 PRESTIGE</button></div><p class="small">${shopTab==='coins'?'Buy fish with coins earned by playing.':'One-time purchases through Google Play. Sign-in required. Final prices are shown by Google Play.'}</p><div id="shop-grid" class="shop-grid">${items.map(f=>`<div class="shop-item"><canvas width="96" height="64" data-skin="${f.i}"></canvas><strong>${esc(f.name)}</strong><div class="small">${f.kind==='coins'?'🪙 '+f.price+' coins':f.eur+' €'}</div><button data-buy="${f.i}" ${shopBusy?'disabled':''}>${ownedSkins.has(f.i)?selected===f.i?'EQUIPPED':'EQUIP':f.kind==='premium'?'BUY €':'BUY'}</button></div>`).join('')}</div><p id="online-error" class="error" role="alert"></p><button id="shop-collection" class="alt">SCORE-UNLOCKED FISH</button><button id="shop-restore" class="alt">RESTORE PURCHASES</button><button id="shop-back" class="alt">RETOUR</button>`);
          document.querySelectorAll('[data-skin]').forEach(el=>shopPreview(el,Number(el.dataset.skin)));
          document.getElementById('tab-coins').onclick=()=>{shopTab='coins';renderShop()};
          document.getElementById('tab-premium').onclick=()=>{shopTab='premium';renderShop()};
@@ -473,12 +473,12 @@ async function buySkin(i){
          if(f.kind==='premium'){await buyPremiumSkin(i);return}
          if(f.kind!=='coins')return;
          if(ownedSkins.has(i)){selectSkin(i);return}
-         if(coins<f.price){errorOnline('Pas assez de pièces !');return}
-         if(!confirm('Acheter '+f.name+' pour '+f.price+' pièces ?'))return;
+         if(coins<f.price){errorOnline('Not enough coins!');return}
+         if(!confirm('Buy '+f.name+' for '+f.price+' coins?'))return;
          shopBusy=true;renderShop();
          try{
           if(session){
-           if(getPendingCoins(session.user.id).length){throw Error('Attends la synchronisation des récompenses avant un achat.')}
+           if(getPendingCoins(session.user.id).length){throw Error('Wait for pending rewards to sync before buying.')}
            const result=await rpc('fishy_buy_skin',{p_skin_id:i});coins=Number(result);ownedSkins.add(i);saveOwned();
           }else{localCoins-=f.price;coins=localCoins;localStorage.setItem('fishy-retro-local-coins',String(localCoins));ownedSkins.add(i);saveOwned()}
           selected=i;saveSelection();localStorage.setItem(selectKey(),String(i));sfx('unlock');
@@ -490,25 +490,25 @@ async function buySkin(i){
 const PREMIUM_IDS={20:'fishy_bronze',21:'fishy_silver',22:'fishy_gold',23:'fishy_platinum',24:'fishy_emerald',25:'fishy_ruby',26:'fishy_sapphire',27:'fishy_amethyst',28:'fishy_diamond',29:'fishy_black_diamond'};
 const billing=()=>window.Capacitor?.Plugins?.FishyBilling;
 async function verifyPremiumPurchase(purchase){
- if(!session)throw Error('Connecte-toi avant de valider un achat.');
+ if(!session)throw Error('Sign in before confirming a purchase.');
  await refresh();
- if(!session)throw Error('Session expirée, reconnecte-toi.');
+ if(!session)throw Error('Session expired. Please sign in again.');
  const r=await fetch(endpoint+'/functions/v1/verify-fishy-purchase',{method:'POST',headers:{'apikey':anon,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({productId:purchase.productId,purchaseToken:purchase.purchaseToken})});
  const data=await r.json().catch(()=>({}));
- if(!r.ok||!data.ok)throw Error(data.error||'Vérification Google Play impossible');
+ if(!r.ok||!data.ok)throw Error(data.error||'Google Play verification failed');
  await loadShopOwned();
  return data;
 }
 async function buyPremiumSkin(i){
  if(shopBusy)return;
  if(ownedSkins.has(i)){selectSkin(i);return}
- if(!session||!profile){errorOnline('Connecte-toi via CLASSEMENT avant un achat réel.');return}
- if(!billing()){errorOnline('Les achats Google Play sont disponibles uniquement dans l’application Android.');return}
+ if(!session||!profile){errorOnline('Sign in through LEADERBOARD before buying premium skins.');return}
+ if(!billing()){errorOnline('Google Play purchases are only available in the Android app.');return}
  const productId=PREMIUM_IDS[i];if(!productId)return;
  shopBusy=true;renderShop();
  try{
   const purchase=await billing().purchase({productId});
-  if(purchase.pending){errorOnline('Paiement en attente : le poisson sera débloqué après validation.');return}
+  if(purchase.pending){errorOnline('Payment pending. Your fish will unlock after confirmation.');return}
   await verifyPremiumPurchase(purchase);
   selected=i;saveSelection();localStorage.setItem(selectKey(),String(i));sfx('unlock');
  }catch(e){errorOnline(e.message||String(e));}
@@ -518,7 +518,7 @@ async function restorePremiumPurchases(silent=false){
  if(!session||!billing())return;
  try{
   const result=await billing().restorePurchases();
-  for(const p of result.purchases||[]){if(PREMIUM_IDS[Object.keys(PREMIUM_IDS).find(k=>PREMIUM_IDS[k]===p.productId)]&&p.purchaseToken){try{await verifyPremiumPurchase(p)}catch(e){console.warn('Restauration achat:',e.message)}}}
+  for(const p of result.purchases||[]){if(PREMIUM_IDS[Object.keys(PREMIUM_IDS).find(k=>PREMIUM_IDS[k]===p.productId)]&&p.purchaseToken){try{await verifyPremiumPurchase(p)}catch(e){console.warn('Purchase restoration:',e.message)}}}
   await loadShopOwned();if(document.getElementById('shop-grid'))renderShop();
  }catch(e){if(!silent)errorOnline('Restauration impossible : '+e.message)}
 }
@@ -526,7 +526,7 @@ const pendingKey=id=>'fishy-v5-pending-'+id;
 function getPendingCoins(id){try{const rows=JSON.parse(localStorage.getItem(pendingKey(id))||'[]');return Array.isArray(rows)?rows:[]}catch(e){return []}}
 function queueCoinReward(id,uuid,value){
          try{const rows=getPendingCoins(id);if(!rows.some(x=>x.id===uuid))rows.push({id:uuid,score:value});localStorage.setItem(pendingKey(id),JSON.stringify(rows))}
-         catch(e){console.warn('Impossible de mémoriser la récompense en attente',e)}
+         catch(e){console.warn('Could not store pending reward',e)}
 }
 async function loadCoinWallet(){
          if(!session){coins=localCoins;return}
@@ -535,7 +535,7 @@ async function loadCoinWallet(){
           const result=await rpc('fishy_coin_balance');
           if(session?.user?.id===id)coins=Math.max(0,Number(result)||0);
           void syncCoinRewards(id);
-         }catch(e){console.warn('Portefeuille indisponible (SQL V5 à installer ?)',e.message)}
+         }catch(e){console.warn('Wallet unavailable (check Supabase SQL setup)',e.message)}
 }
 async function syncCoinRewards(id){
          if(coinSyncRunning||!session||session.user.id!==id)return;
@@ -553,12 +553,12 @@ async function syncCoinRewards(id){
             coinSync=rows.length?'pending':'ready';
            }
           }
-         }catch(e){if(session?.user?.id===id)coinSync='error';console.warn('Pièces en attente de synchronisation :',e.message)}
+         }catch(e){if(session?.user?.id===id)coinSync='error';console.warn('Coins en attente de synchronisation :',e.message)}
          finally{coinSyncRunning=false}
 }
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const countries=[["AF", "Afghanistan"], ["ZA", "Afrique du Sud"], ["AL", "Albanie"], ["DZ", "Algérie"], ["DE", "Allemagne"], ["AD", "Andorre"], ["AO", "Angola"], ["AI", "Anguilla"], ["AQ", "Antarctique"], ["AG", "Antigua-et-Barbuda"], ["SA", "Arabie saoudite"], ["AR", "Argentine"], ["AM", "Arménie"], ["AW", "Aruba"], ["AU", "Australie"], ["AT", "Autriche"], ["AZ", "Azerbaïdjan"], ["BS", "Bahamas"], ["BH", "Bahreïn"], ["BD", "Bangladesh"], ["BB", "Barbade"], ["BE", "Belgique"], ["BZ", "Belize"], ["BM", "Bermudes"], ["BT", "Bhoutan"], ["BY", "Biélorussie"], ["BO", "Bolivie"], ["BA", "Bosnie-Herzégovine"], ["BW", "Botswana"], ["BN", "Brunei"], ["BR", "Brésil"], ["BG", "Bulgarie"], ["BF", "Burkina Faso"], ["BI", "Burundi"], ["BJ", "Bénin"], ["KH", "Cambodge"], ["CM", "Cameroun"], ["CA", "Canada"], ["CV", "Cap-Vert"], ["CL", "Chili"], ["CN", "Chine"], ["CY", "Chypre"], ["CO", "Colombie"], ["KM", "Comores"], ["CG", "Congo-Brazzaville"], ["CD", "Congo-Kinshasa"], ["KP", "Corée du Nord"], ["KR", "Corée du Sud"], ["CR", "Costa Rica"], ["HR", "Croatie"], ["CU", "Cuba"], ["CW", "Curaçao"], ["CI", "Côte d’Ivoire"], ["DK", "Danemark"], ["DJ", "Djibouti"], ["DM", "Dominique"], ["ES", "Espagne"], ["EE", "Estonie"], ["SZ", "Eswatini"], ["FJ", "Fidji"], ["FI", "Finlande"], ["FR", "France"], ["GA", "Gabon"], ["GM", "Gambie"], ["GH", "Ghana"], ["GI", "Gibraltar"], ["GD", "Grenade"], ["GL", "Groenland"], ["GR", "Grèce"], ["GP", "Guadeloupe"], ["GU", "Guam"], ["GT", "Guatemala"], ["GG", "Guernesey"], ["GN", "Guinée"], ["GQ", "Guinée équatoriale"], ["GW", "Guinée-Bissau"], ["GY", "Guyana"], ["GF", "Guyane française"], ["GE", "Géorgie"], ["GS", "Géorgie du Sud-et-les Îles Sandwich du Sud"], ["HT", "Haïti"], ["HN", "Honduras"], ["HU", "Hongrie"], ["IN", "Inde"], ["ID", "Indonésie"], ["IQ", "Irak"], ["IR", "Iran"], ["IE", "Irlande"], ["IS", "Islande"], ["IL", "Israël"], ["IT", "Italie"], ["JM", "Jamaïque"], ["JP", "Japon"], ["JE", "Jersey"], ["JO", "Jordanie"], ["KZ", "Kazakhstan"], ["KE", "Kenya"], ["KG", "Kirghizstan"], ["KI", "Kiribati"], ["KW", "Koweït"], ["RE", "La Réunion"], ["LA", "Laos"], ["LS", "Lesotho"], ["LV", "Lettonie"], ["LB", "Liban"], ["LR", "Liberia"], ["LY", "Libye"], ["LI", "Liechtenstein"], ["LT", "Lituanie"], ["LU", "Luxembourg"], ["MK", "Macédoine du Nord"], ["MG", "Madagascar"], ["MY", "Malaisie"], ["MW", "Malawi"], ["MV", "Maldives"], ["ML", "Mali"], ["MT", "Malte"], ["MA", "Maroc"], ["MQ", "Martinique"], ["MU", "Maurice"], ["MR", "Mauritanie"], ["YT", "Mayotte"], ["MX", "Mexique"], ["FM", "Micronésie"], ["MD", "Moldavie"], ["MC", "Monaco"], ["MN", "Mongolie"], ["MS", "Montserrat"], ["ME", "Monténégro"], ["MZ", "Mozambique"], ["MM", "Myanmar (Birmanie)"], ["NA", "Namibie"], ["NR", "Nauru"], ["NI", "Nicaragua"], ["NE", "Niger"], ["NG", "Nigeria"], ["NU", "Niue"], ["NO", "Norvège"], ["NC", "Nouvelle-Calédonie"], ["NZ", "Nouvelle-Zélande"], ["NP", "Népal"], ["OM", "Oman"], ["UG", "Ouganda"], ["UZ", "Ouzbékistan"], ["PK", "Pakistan"], ["PW", "Palaos"], ["PA", "Panama"], ["PG", "Papouasie-Nouvelle-Guinée"], ["PY", "Paraguay"], ["NL", "Pays-Bas"], ["BQ", "Pays-Bas caribéens"], ["PH", "Philippines"], ["PL", "Pologne"], ["PF", "Polynésie française"], ["PR", "Porto Rico"], ["PT", "Portugal"], ["PE", "Pérou"], ["QA", "Qatar"], ["HK", "R.A.S. chinoise de Hong Kong"], ["MO", "R.A.S. chinoise de Macao"], ["RO", "Roumanie"], ["GB", "Royaume-Uni"], ["RU", "Russie"], ["RW", "Rwanda"], ["CF", "République centrafricaine"], ["DO", "République dominicaine"], ["EH", "Sahara occidental"], ["BL", "Saint-Barthélemy"], ["KN", "Saint-Christophe-et-Niévès"], ["SM", "Saint-Marin"], ["MF", "Saint-Martin"], ["SX", "Saint-Martin (partie néerlandaise)"], ["PM", "Saint-Pierre-et-Miquelon"], ["VC", "Saint-Vincent-et-les Grenadines"], ["SH", "Sainte-Hélène"], ["LC", "Sainte-Lucie"], ["SV", "Salvador"], ["WS", "Samoa"], ["AS", "Samoa américaines"], ["ST", "Sao Tomé-et-Principe"], ["RS", "Serbie"], ["SC", "Seychelles"], ["SL", "Sierra Leone"], ["SG", "Singapour"], ["SK", "Slovaquie"], ["SI", "Slovénie"], ["SO", "Somalie"], ["SD", "Soudan"], ["SS", "Soudan du Sud"], ["LK", "Sri Lanka"], ["CH", "Suisse"], ["SR", "Suriname"], ["SE", "Suède"], ["SJ", "Svalbard et Jan Mayen"], ["SY", "Syrie"], ["SN", "Sénégal"], ["TJ", "Tadjikistan"], ["TZ", "Tanzanie"], ["TW", "Taïwan"], ["TD", "Tchad"], ["CZ", "Tchéquie"], ["TF", "Terres australes françaises"], ["IO", "Territoire britannique de l’océan Indien"], ["PS", "Territoires palestiniens"], ["TH", "Thaïlande"], ["TL", "Timor oriental"], ["TG", "Togo"], ["TK", "Tokelau"], ["TO", "Tonga"], ["TT", "Trinité-et-Tobago"], ["TN", "Tunisie"], ["TM", "Turkménistan"], ["TR", "Turquie"], ["TV", "Tuvalu"], ["UA", "Ukraine"], ["UY", "Uruguay"], ["VU", "Vanuatu"], ["VE", "Venezuela"], ["VN", "Viêt Nam"], ["WF", "Wallis-et-Futuna"], ["YE", "Yémen"], ["ZM", "Zambie"], ["ZW", "Zimbabwe"], ["EG", "Égypte"], ["AE", "Émirats arabes unis"], ["EC", "Équateur"], ["ER", "Érythrée"], ["VA", "État de la Cité du Vatican"], ["US", "États-Unis"], ["ET", "Éthiopie"], ["BV", "Île Bouvet"], ["CX", "Île Christmas"], ["IM", "Île de Man"], ["NF", "Île Norfolk"], ["KY", "Îles Caïmans"], ["CC", "Îles Cocos"], ["CK", "Îles Cook"], ["FO", "Îles Féroé"], ["HM", "Îles Heard-et-MacDonald"], ["FK", "Îles Malouines"], ["MP", "Îles Mariannes du Nord"], ["MH", "Îles Marshall"], ["UM", "Îles mineures éloignées des États-Unis"], ["PN", "Îles Pitcairn"], ["SB", "Îles Salomon"], ["TC", "Îles Turques-et-Caïques"], ["VG", "Îles Vierges britanniques"], ["VI", "Îles Vierges des États-Unis"], ["AX", "Îles Åland"]];
+const countries=[["AF", "Afghanistan"], ["ZA", "South Africa"], ["AL", "Albania"], ["DZ", "Algeria"], ["DE", "Germany"], ["AD", "Andorra"], ["AO", "Angola"], ["AI", "Anguilla"], ["AQ", "Antarctica"], ["AG", "Antigua & Barbuda"], ["SA", "Saudi Arabia"], ["AR", "Argentina"], ["AM", "Armenia"], ["AW", "Aruba"], ["AU", "Australia"], ["AT", "Austria"], ["AZ", "Azerbaijan"], ["BS", "Bahamas"], ["BH", "Bahrain"], ["BD", "Bangladesh"], ["BB", "Barbados"], ["BE", "Belgium"], ["BZ", "Belize"], ["BM", "Bermuda"], ["BT", "Bhutan"], ["BY", "Belarus"], ["BO", "Bolivia"], ["BA", "Bosnia & Herzegovina"], ["BW", "Botswana"], ["BN", "Brunei"], ["BR", "Brazil"], ["BG", "Bulgaria"], ["BF", "Burkina Faso"], ["BI", "Burundi"], ["BJ", "Benin"], ["KH", "Cambodia"], ["CM", "Cameroon"], ["CA", "Canada"], ["CV", "Cape Verde"], ["CL", "Chile"], ["CN", "China"], ["CY", "Cyprus"], ["CO", "Colombia"], ["KM", "Comoros"], ["CG", "Congo - Brazzaville"], ["CD", "Congo - Kinshasa"], ["KP", "North Korea"], ["KR", "South Korea"], ["CR", "Costa Rica"], ["HR", "Croatia"], ["CU", "Cuba"], ["CW", "Curaçao"], ["CI", "Côte d’Ivoire"], ["DK", "Denmark"], ["DJ", "Djibouti"], ["DM", "Dominica"], ["ES", "Spain"], ["EE", "Estonia"], ["SZ", "Eswatini"], ["FJ", "Fiji"], ["FI", "Finland"], ["FR", "France"], ["GA", "Gabon"], ["GM", "Gambia"], ["GH", "Ghana"], ["GI", "Gibraltar"], ["GD", "Grenada"], ["GL", "Greenland"], ["GR", "Greece"], ["GP", "Guadeloupe"], ["GU", "Guam"], ["GT", "Guatemala"], ["GG", "Guernsey"], ["GN", "Guinea"], ["GQ", "Equatorial Guinea"], ["GW", "Guinea-Bissau"], ["GY", "Guyana"], ["GF", "French Guiana"], ["GE", "Georgia"], ["GS", "South Georgia & South Sandwich Islands"], ["HT", "Haiti"], ["HN", "Honduras"], ["HU", "Hungary"], ["IN", "India"], ["ID", "Indonesia"], ["IQ", "Iraq"], ["IR", "Iran"], ["IE", "Ireland"], ["IS", "Iceland"], ["IL", "Israel"], ["IT", "Italy"], ["JM", "Jamaica"], ["JP", "Japan"], ["JE", "Jersey"], ["JO", "Jordan"], ["KZ", "Kazakhstan"], ["KE", "Kenya"], ["KG", "Kyrgyzstan"], ["KI", "Kiribati"], ["KW", "Kuwait"], ["RE", "Réunion"], ["LA", "Laos"], ["LS", "Lesotho"], ["LV", "Latvia"], ["LB", "Lebanon"], ["LR", "Liberia"], ["LY", "Libya"], ["LI", "Liechtenstein"], ["LT", "Lithuania"], ["LU", "Luxembourg"], ["MK", "North Macedonia"], ["MG", "Madagascar"], ["MY", "Malaysia"], ["MW", "Malawi"], ["MV", "Maldives"], ["ML", "Mali"], ["MT", "Malta"], ["MA", "Morocco"], ["MQ", "Martinique"], ["MU", "Mauritius"], ["MR", "Mauritania"], ["YT", "Mayotte"], ["MX", "Mexico"], ["FM", "Micronesia"], ["MD", "Moldova"], ["MC", "Monaco"], ["MN", "Mongolia"], ["MS", "Montserrat"], ["ME", "Montenegro"], ["MZ", "Mozambique"], ["MM", "Myanmar (Burma)"], ["NA", "Namibia"], ["NR", "Nauru"], ["NI", "Nicaragua"], ["NE", "Niger"], ["NG", "Nigeria"], ["NU", "Niue"], ["NO", "Norway"], ["NC", "New Caledonia"], ["NZ", "New Zealand"], ["NP", "Nepal"], ["OM", "Oman"], ["UG", "Uganda"], ["UZ", "Uzbekistan"], ["PK", "Pakistan"], ["PW", "Palau"], ["PA", "Panama"], ["PG", "Papua New Guinea"], ["PY", "Paraguay"], ["NL", "Netherlands"], ["BQ", "Caribbean Netherlands"], ["PH", "Philippines"], ["PL", "Poland"], ["PF", "French Polynesia"], ["PR", "Puerto Rico"], ["PT", "Portugal"], ["PE", "Peru"], ["QA", "Qatar"], ["HK", "Hong Kong SAR China"], ["MO", "Macao SAR China"], ["RO", "Romania"], ["GB", "United Kingdom"], ["RU", "Russia"], ["RW", "Rwanda"], ["CF", "Central African Republic"], ["DO", "Dominican Republic"], ["EH", "Western Sahara"], ["BL", "St. Barthélemy"], ["KN", "St. Kitts & Nevis"], ["SM", "San Marino"], ["MF", "St. Martin"], ["SX", "Sint Maarten"], ["PM", "St. Pierre & Miquelon"], ["VC", "St. Vincent & Grenadines"], ["SH", "St. Helena"], ["LC", "St. Lucia"], ["SV", "El Salvador"], ["WS", "Samoa"], ["AS", "American Samoa"], ["ST", "São Tomé & Príncipe"], ["RS", "Serbia"], ["SC", "Seychelles"], ["SL", "Sierra Leone"], ["SG", "Singapore"], ["SK", "Slovakia"], ["SI", "Slovenia"], ["SO", "Somalia"], ["SD", "Sudan"], ["SS", "South Sudan"], ["LK", "Sri Lanka"], ["CH", "Switzerland"], ["SR", "Suriname"], ["SE", "Sweden"], ["SJ", "Svalbard & Jan Mayen"], ["SY", "Syria"], ["SN", "Senegal"], ["TJ", "Tajikistan"], ["TZ", "Tanzania"], ["TW", "Taiwan"], ["TD", "Chad"], ["CZ", "Czechia"], ["TF", "French Southern Territories"], ["IO", "British Indian Ocean Territory"], ["PS", "Palestinian Territories"], ["TH", "Thailand"], ["TL", "Timor-Leste"], ["TG", "Togo"], ["TK", "Tokelau"], ["TO", "Tonga"], ["TT", "Trinidad & Tobago"], ["TN", "Tunisia"], ["TM", "Turkmenistan"], ["TR", "Türkiye"], ["TV", "Tuvalu"], ["UA", "Ukraine"], ["UY", "Uruguay"], ["VU", "Vanuatu"], ["VE", "Venezuela"], ["VN", "Vietnam"], ["WF", "Wallis & Futuna"], ["YE", "Yemen"], ["ZM", "Zambia"], ["ZW", "Zimbabwe"], ["EG", "Egypt"], ["AE", "United Arab Emirates"], ["EC", "Ecuador"], ["ER", "Eritrea"], ["VA", "Vatican City"], ["US", "United States"], ["ET", "Ethiopia"], ["BV", "Bouvet Island"], ["CX", "Christmas Island"], ["IM", "Isle of Man"], ["NF", "Norfolk Island"], ["KY", "Cayman Islands"], ["CC", "Cocos (Keeling) Islands"], ["CK", "Cook Islands"], ["FO", "Faroe Islands"], ["HM", "Heard & McDonald Islands"], ["FK", "Falkland Islands"], ["MP", "Northern Mariana Islands"], ["MH", "Marshall Islands"], ["UM", "U.S. Outlying Islands"], ["PN", "Pitcairn Islands"], ["SB", "Solomon Islands"], ["TC", "Turks & Caicos Islands"], ["VG", "British Virgin Islands"], ["VI", "U.S. Virgin Islands"], ["AX", "Åland Islands"]];
 const countryName=code=>countries.find(x=>x[0]===code)?.[1]||('🌍 '+code);
 function showOnline(html){content.innerHTML=html;modal.classList.add('show')}
 function closeOnline(){modal.classList.remove('show');content.innerHTML=''}
@@ -572,12 +572,12 @@ function applyRecordScope(){
 }
 function saveSession(s){session=s;if(!s){profile=null;applyRecordScope()}try{if(s)localStorage.setItem('fishy-v8-session',JSON.stringify(s));else localStorage.removeItem('fishy-v8-session')}catch(e){}}
 async function api(path,method='GET',body=null,token=null){
-                 if(!configured)throw Error('Supabase non configuré : consulte le README du ZIP V8.');
+                 if(!configured)throw Error('Supabase is not configured. See the project README.');
                  const headers={'apikey':anon,'Content-Type':'application/json'};
                  if(token||session?.access_token)headers.Authorization='Bearer '+(token||session.access_token);
                  const response=await fetch(endpoint+path,{method,headers,body:body===null?undefined:JSON.stringify(body)});
                  const raw=await response.text();let data;try{data=raw?JSON.parse(raw):null}catch(e){data=null}
-                 if(!response.ok)throw Error(data?.msg||data?.error_description||data?.message||data?.error||('Erreur réseau '+response.status));
+                 if(!response.ok)throw Error(data?.msg||data?.error_description||data?.message||data?.error||('Network error '+response.status));
                  return data;
 }
 async function refresh(){
@@ -588,12 +588,12 @@ async function refresh(){
 }
 async function rpc(name,args={}){await refresh();return api('/rest/v1/rpc/'+name,'POST',args)}
 async function loadProfile(){if(!session)return null;await refresh();if(!session)return null;const rows=await api('/rest/v1/profiles?select=id,username,country,best_score&id=eq.'+encodeURIComponent(session.user.id));profile=rows?.[0]||null;applyRecordScope();await loadCoinWallet();try{await loadShopOwned()}catch(e){console.warn("Skins indisponibles:",e.message)}return profile}
-async function openLeaderboard(){onlineFrom=state;if(state==='play')state='paused';if(!configured){showOnline('<h2>🌍 CLASSEMENT</h2><p>Le classement en ligne nécessite une configuration Supabase.</p><p class="small">Renseigne www/config.js puis exécute le SQL fourni dans le ZIP.</p><button id="close-online">RETOUR AU JEU</button>');document.getElementById('close-online').onclick=leaveOnline;return}
-                 showOnline('<h2>🌍 CLASSEMENT</h2><p>Connexion au serveur...</p>');try{await loadProfile();if(!session)renderLogin();else if(!profile)renderCreateProfile();else await renderRanking()}catch(e){showOnline('<h2>CONNEXION IMPOSSIBLE</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}}
+async function openLeaderboard(){onlineFrom=state;if(state==='play')state='paused';if(!configured){showOnline('<h2>🌍 LEADERBOARD</h2><p>Online leaderboards require Supabase configuration.</p><p class="small">Set up www/config.js and run the SQL included in the ZIP.</p><button id="close-online">BACK TO GAME</button>');document.getElementById('close-online').onclick=leaveOnline;return}
+                 showOnline('<h2>🌍 LEADERBOARD</h2><p>Connecting to server...</p>');try{await loadProfile();if(!session)renderLogin();else if(!profile)renderCreateProfile();else await renderRanking()}catch(e){showOnline('<h2>CONNECTION FAILED</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}}
 function leaveOnline(){closeOnline();if(onlineFrom==='play')state='paused'}
 function renderLogin(mode='login'){
                  const signup=mode==='signup';
-                 showOnline(`<h2>🐟 ${signup?'CRÉER UN COMPTE':'MON PROFIL'}</h2><p>${signup?'Crée ton compte FISHY! RETRO avec une adresse email et un mot de passe.':'Connecte-toi pour retrouver ton record et ton classement.'}</p><form id="email-auth-form"><label>E-MAIL</label><input id="login-email" type="email" autocomplete="email" placeholder="toi@exemple.com" maxlength="254" required><label>MOT DE PASSE</label><input id="login-password" type="password" autocomplete="${signup?'new-password':'current-password'}" placeholder="8 caractères minimum" minlength="8" required><button id="email-submit" type="submit">${signup?'CRÉER MON COMPTE':'SE CONNECTER'}</button></form><button id="switch-email-mode" class="alt">${signup?'J AI DÉJÀ UN COMPTE':'CRÉER UN COMPTE E-MAIL'}</button><button id="google-login" class="alt">SE CONNECTER AVEC GOOGLE</button><p class="small">${signup?'L inscription ne demande aucun email si la confirmation est désactivée dans Supabase. Utilise une adresse qui t appartient.':'Ton mot de passe n est jamais enregistré par le jeu. En cas d oubli, utilise Google si ton compte y est associé ; la récupération par email reste limitée sans SMTP.'}</p><p id="online-error" class="error" role="alert"></p><button id="close-online" class="alt">RETOUR</button>`);
+                 showOnline(`<h2>🐟 ${signup?'CREATE ACCOUNT':'MY PROFILE'}</h2><p>${signup?'Create your FISHY! RETRO account using email and a password.':'Sign in to access your personal best and rankings.'}</p><form id="email-auth-form"><label>E-MAIL</label><input id="login-email" type="email" autocomplete="email" placeholder="toi@exemple.com" maxlength="254" required><label>PASSWORD</label><input id="login-password" type="password" autocomplete="${signup?'new-password':'current-password'}" placeholder="At least 8 characters" minlength="8" required><button id="email-submit" type="submit">${signup?'CREATE ACCOUNT':'SIGN IN'}</button></form><button id="switch-email-mode" class="alt">${signup?'I HAVE AN ACCOUNT':'CREATE ACCOUNT E-MAIL'}</button><button id="google-login" class="alt">SIGN IN WITH GOOGLE</button><p class="small">${signup?'Email confirmation is not required if disabled in Supabase. Use an email address you own.':'Your password is never stored by the game. Password recovery by email may be limited without SMTP.'}</p><p id="online-error" class="error" role="alert"></p><button id="close-online" class="alt">RETOUR</button>`);
                  document.getElementById('email-auth-form').onsubmit=e=>{e.preventDefault();emailPasswordAuth(mode)};
                  document.getElementById('switch-email-mode').onclick=()=>renderLogin(signup?'login':'signup');
                  document.getElementById('google-login').onclick=googleLogin;
@@ -601,28 +601,28 @@ function renderLogin(mode='login'){
 }
 async function emailPasswordAuth(mode){
                  const email=document.getElementById('login-email').value.trim(),password=document.getElementById('login-password').value;
-                 if(!/^\S+@\S+\.\S+$/.test(email)){errorOnline('Adresse e-mail invalide.');return}
-                 if(password.length<8){errorOnline('Le mot de passe doit contenir au moins 8 caractères.');return}
-                 const button=document.getElementById('email-submit');button.disabled=true;button.textContent='CONNEXION...';
+                 if(!/^\S+@\S+\.\S+$/.test(email)){errorOnline('Invalid email address.');return}
+                 if(password.length<8){errorOnline('Password must be at least 8 characters.');return}
+                 const button=document.getElementById('email-submit');button.disabled=true;button.textContent='SIGNING IN...';
                  try{
                   if(mode==='signup'){
                    const result=await api('/auth/v1/signup','POST',{email,password});
-                   if(!result?.access_token){errorOnline('Compte créé mais confirmation email demandée. Dans Supabase > Authentication > Providers > Email, désactive « Confirm email » pour un fonctionnement sans email.');return}
+                   if(!result?.access_token){errorOnline('Account created, but email confirmation is required. Check Supabase Authentication > Providers > Email settings.');return}
                    await acceptAuth(result);
                   }else{
                    const result=await api('/auth/v1/token?grant_type=password','POST',{email,password});
                    await acceptAuth(result);
                   }
-                 }catch(e){const msg=String(e.message||'');errorOnline(/email rate limit exceeded|over_email_send_rate_limit/i.test(msg)?'Supabase tente encore d envoyer un email de confirmation. Dans Supabase > Authentication > Providers > Email, désactive Confirm email puis enregistre. Si cette option est déjà désactivée, vérifie que ton application utilise le bon projet Supabase.':msg==='Invalid login credentials'?'Identifiants incorrects, ou compte créé avec Google uniquement.':msg)}
-                 finally{if(button.isConnected){button.disabled=false;button.textContent=mode==='signup'?'CRÉER MON COMPTE':'SE CONNECTER'}}
+                 }catch(e){const msg=String(e.message||'');errorOnline(/email rate limit exceeded|over_email_send_rate_limit/i.test(msg)?'Supabase is still trying to send a confirmation email. Check the email confirmation settings and your Supabase project configuration.':msg==='Invalid login credentials'?'Incorrect credentials or Google-only account.':msg)}
+                 finally{if(button.isConnected){button.disabled=false;button.textContent=mode==='signup'?'CREATE ACCOUNT':'SIGN IN'}}
 }
-async function acceptAuth(data){if(!data?.access_token||!data?.user)throw Error('Réponse de connexion incomplète.');saveSession({...data,expires_at:Date.now()+(data.expires_in||3600)*1000});await loadProfile();if(profile)await renderRanking();else renderCreateProfile()}
-function renderCreateProfile(){showOnline(`<h2>🌍 CRÉER TON PROFIL</h2><p>Choisis ton pseudo et ton pays. Le pseudo doit être unique. <b>Le pays ne pourra plus être changé.</b></p><label>PSEUDO (3 À 16 CARACTÈRES)</label><input id="new-username" maxlength="16" placeholder="FishMaster" autocomplete="off"><label>PAYS DÉFINITIF</label><select id="new-country">${countries.map(([code,name])=>`<option value="${code}">${name}</option>`).join('')}</select><p class="small">L'identifiant de ton compte reste privé. Seuls ton pseudo, ton pays et ton meilleur score sont publics.</p><button id="create-profile">CONFIRMER MON PROFIL</button><p id="online-error" class="error"></p><button id="logout" class="alt">SE DÉCONNECTER</button>`);
-                 document.getElementById('create-profile').onclick=async()=>{const username=document.getElementById('new-username').value.trim(),country=document.getElementById('new-country').value;if(!/^[a-zA-Z0-9_]{3,16}$/.test(username)){errorOnline('3 à 16 caractères : lettres, chiffres et _ uniquement.');return}if(!confirm('Confirmer le pays '+countryName(country)+' ? Il sera définitif.'))return;try{await rpc('create_fishy_profile',{p_username:username,p_country:country});await loadProfile();await renderRanking()}catch(e){errorOnline(e.message.includes('unique')?'Pseudo déjà utilisé. Essaie un autre nom.':e.message)}};
+async function acceptAuth(data){if(!data?.access_token||!data?.user)throw Error('Incomplete sign-in response.');saveSession({...data,expires_at:Date.now()+(data.expires_in||3600)*1000});await loadProfile();if(profile)await renderRanking();else renderCreateProfile()}
+function renderCreateProfile(){showOnline(`<h2>🌍 CREATE YOUR PROFILE</h2><p>Choose a unique username and your country. <b>Your country cannot be changed later.</b></p><label>USERNAME (3–16 CHARACTERS)</label><input id="new-username" maxlength="16" placeholder="FishMaster" autocomplete="off"><label>COUNTRY (PERMANENT)</label><select id="new-country">${countries.map(([code,name])=>`<option value="${code}">${name}</option>`).join('')}</select><p class="small">Your account ID stays private. Only your username, country, and best score are public.</p><button id="create-profile">CONFIRMER MY PROFILE</button><p id="online-error" class="error"></p><button id="logout" class="alt">SIGN OUT</button>`);
+                 document.getElementById('create-profile').onclick=async()=>{const username=document.getElementById('new-username').value.trim(),country=document.getElementById('new-country').value;if(!/^[a-zA-Z0-9_]{3,16}$/.test(username)){errorOnline('Use 3–16 characters: letters, digits and underscore only.');return}if(!confirm('Confirm country '+countryName(country)+'? You cannot change it later.'))return;try{await rpc('create_fishy_profile',{p_username:username,p_country:country});await loadProfile();await renderRanking()}catch(e){errorOnline(e.message.includes('unique')?'Username already taken. Try another.':e.message)}};
                  document.getElementById('logout').onclick=logout}
-async function renderRanking(){rankingScope=rankingScope==='country'?'country':'world';showOnline(`<h2>🏆 CLASSEMENT</h2><div class="profile">${esc(profile.username)} · ${esc(countryName(profile.country))}<br>Ton record en ligne : <b>${profile.best_score}</b></div><div class="tabs"><button id="rank-world">🌍 MONDIAL</button><button id="rank-country">${esc(profile.country)} MON PAYS</button></div><div id="rank-content"><p>Chargement...</p></div><button id="rank-refresh" class="alt">ACTUALISER</button><button id="logout" class="alt">DÉCONNEXION</button><button id="close-online">RETOUR</button>`);
+async function renderRanking(){rankingScope=rankingScope==='country'?'country':'world';showOnline(`<h2>🏆 LEADERBOARD</h2><div class="profile">${esc(profile.username)} · ${esc(countryName(profile.country))}<br>Your online best: <b>${profile.best_score}</b></div><div class="tabs"><button id="rank-world">🌍 WORLD</button><button id="rank-country">${esc(profile.country)} MY COUNTRY</button></div><div id="rank-content"><p>Loading...</p></div><button id="rank-refresh" class="alt">REFRESH</button><button id="logout" class="alt">SIGN OUT</button><button id="close-online">RETOUR</button>`);
                  document.getElementById('rank-world').onclick=()=>{rankingScope='world';fetchRanks()};document.getElementById('rank-country').onclick=()=>{rankingScope='country';fetchRanks()};document.getElementById('rank-refresh').onclick=fetchRanks;document.getElementById('logout').onclick=logout;document.getElementById('close-online').onclick=leaveOnline;await fetchRanks()}
-async function fetchRanks(){const target=document.getElementById('rank-content');if(!target)return;target.innerHTML='<p>Chargement...</p>';try{const country=rankingScope==='country'?profile.country:null;const [rows,own]=await Promise.all([rpc('fishy_leaderboard',{p_country:country,p_limit:100}),rpc('fishy_my_rank',{p_country:country})]);const medals=['🥇','🥈','🥉'];target.innerHTML=`<p class="small">TOP 100 ${rankingScope==='world'?'MONDIAL':esc(countryName(profile.country))}</p><table><thead><tr><th>#</th><th>JOUEUR</th><th>SCORE</th></tr></thead><tbody>${(rows||[]).map((r,i)=>`<tr class="${r.username===profile.username?'mine':''}"><td>${medals[i]||r.position}</td><td>${esc(countryName(r.country).split(' ')[0])} ${esc(r.username)}</td><td>${r.best_score}</td></tr>`).join('')||'<tr><td colspan="3">Aucun score</td></tr>'}</tbody></table><p class="profile">TON RANG : <b>${own?.[0]?.position?'#'+own[0].position:'Non classé'}</b> · ${profile.best_score} points</p>`}catch(e){target.innerHTML='<p class="error">'+esc(e.message)+'</p>'}}
+async function fetchRanks(){const target=document.getElementById('rank-content');if(!target)return;target.innerHTML='<p>Loading...</p>';try{const country=rankingScope==='country'?profile.country:null;const [rows,own]=await Promise.all([rpc('fishy_leaderboard',{p_country:country,p_limit:100}),rpc('fishy_my_rank',{p_country:country})]);const medals=['🥇','🥈','🥉'];target.innerHTML=`<p class="small">TOP 100 ${rankingScope==='world'?'WORLD':esc(countryName(profile.country))}</p><table><thead><tr><th>#</th><th>JOUEUR</th><th>SCORE</th></tr></thead><tbody>${(rows||[]).map((r,i)=>`<tr class="${r.username===profile.username?'mine':''}"><td>${medals[i]||r.position}</td><td>${esc(countryName(r.country).split(' ')[0])} ${esc(r.username)}</td><td>${r.best_score}</td></tr>`).join('')||'<tr><td colspan="3">Aucun score</td></tr>'}</tbody></table><p class="profile">YOUR RANK : <b>${own?.[0]?.position?'#'+own[0].position:'Unranked'}</b> · ${profile.best_score} points</p>`}catch(e){target.innerHTML='<p class="error">'+esc(e.message)+'</p>'}}
 async function logout(){try{if(session)await api('/auth/v1/logout','POST',{})}catch(e){}saveSession(null);renderLogin()}
 async function submitRecord(value){
                  if(!configured||!session||!profile||!Number.isSafeInteger(value)||value<=Number(profile.best_score))return;
@@ -630,7 +630,7 @@ async function submitRecord(value){
                  try{
                   await rpc('submit_fishy_score',{p_score:value});
                   if(session?.user?.id===userId){profile.best_score=Math.max(Number(profile.best_score)||0,value);best=Math.max(best,profile.best_score)}
-                 }catch(e){console.warn('Score non synchronisé :',e.message)}
+                 }catch(e){console.warn('Score not synced:',e.message)}
 }
 const OAUTH_CALLBACK='fishyretro://auth/callback';
 async function googleLogin(){
@@ -644,7 +644,7 @@ async function googleLogin(){
                    if(!browser)throw Error('Plugin Capacitor Browser indisponible.');
                    await browser.open({url});
                   }else location.assign(url);
-                 }catch(e){errorOnline('Connexion Google impossible : '+e.message)}
+                 }catch(e){errorOnline('Google sign-in failed: '+e.message)}
 }
 async function oauthCallback(url){
                  try{
@@ -652,14 +652,14 @@ async function oauthCallback(url){
                   if(hash.get('error')||query.get('error'))throw Error(hash.get('error_description')||query.get('error_description')||'Google OAuth');
                   const token=hash.get('access_token'),refreshToken=hash.get('refresh_token');
                   if(!token||!refreshToken){
-                   if(query.get('code'))throw Error('Le serveur a renvoyé un code PKCE. Cette version attend des tokens OAuth : vérifie la configuration du flux Supabase.');
-                   throw Error('Retour OAuth reçu sans tokens de connexion.');
+                   if(query.get('code'))throw Error('The server returned a PKCE code, but this build expects OAuth tokens. Check Supabase OAuth flow settings.');
+                   throw Error('OAuth callback did not contain sign-in tokens.');
                   }
                   const user=await api('/auth/v1/user','GET',null,token);
                   await acceptAuth({access_token:token,refresh_token:refreshToken,user,expires_in:Number(hash.get('expires_in')||3600)});
                   try{await window.Capacitor?.Plugins?.Browser?.close()}catch(e){}
                   if(!window.Capacitor?.isNativePlatform?.())history.replaceState(null,'',location.pathname);
-                 }catch(e){showOnline('<h2>CONNEXION GOOGLE</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}
+                 }catch(e){showOnline('<h2>GOOGLE SIGN-IN</h2><p>'+esc(e.message)+'</p><button id="close-online">RETOUR</button>');document.getElementById('close-online').onclick=leaveOnline}
 }
 try{
                  const app=window.Capacitor?.Plugins?.App;
@@ -673,9 +673,9 @@ try{
 if(location.hash.includes('access_token='))oauthCallback(location.href);
 session=getStored();restoreSkinScope();
 // A stored session must be validated and its own score fetched before showing a record.
-if(session){best=0;coins=0;loadProfile().catch(e=>console.warn('Profil non chargé :',e.message))}
+if(session){best=0;coins=0;loadProfile().catch(e=>console.warn('Profile could not be loaded:',e.message))}
 // Propose profile creation on first launch when online mode is configured.
-if(configured&&!session){let dismissed=false;try{dismissed=localStorage.getItem('fishy-v8-welcome-dismissed')==='1'}catch(e){}if(!dismissed)setTimeout(()=>{if(state==='ready'&&!modal.classList.contains('show')){onlineFrom='ready';renderLogin();const back=document.getElementById('close-online');back.textContent='JOUER SANS COMPTE';back.onclick=()=>{try{localStorage.setItem('fishy-v8-welcome-dismissed','1')}catch(e){}leaveOnline()}}},250)}
+if(configured&&!session){let dismissed=false;try{dismissed=localStorage.getItem('fishy-v8-welcome-dismissed')==='1'}catch(e){}if(!dismissed)setTimeout(()=>{if(state==='ready'&&!modal.classList.contains('show')){onlineFrom='ready';renderLogin();const back=document.getElementById('close-online');back.textContent='PLAY AS GUEST';back.onclick=()=>{try{localStorage.setItem('fishy-v8-welcome-dismissed','1')}catch(e){}leaveOnline()}}},250)}
 
 requestAnimationFrame(loop);
 })();
