@@ -1,8 +1,8 @@
-
 #!/usr/bin/env python3
-"""Apply FISHY branding, fullscreen and Google OAuth to Android."""
+"""Apply FISHY branding, fullscreen, Google OAuth and Android SDK configuration."""
 
 from pathlib import Path
+import re
 import shutil
 import xml.etree.ElementTree as ET
 
@@ -219,7 +219,7 @@ if not manifest.exists():
 ANDROID_NS = "http://schemas.android.com/apk/res/android"
 ns = f"{{{ANDROID_NS}}}"
 
-# Critical: preserve the android namespace when writing XML.
+# Preserve the android namespace when writing XML.
 ET.register_namespace("android", ANDROID_NS)
 
 tree = ET.parse(manifest)
@@ -299,6 +299,59 @@ tree.write(
 # Validate the final XML.
 ET.parse(manifest)
 
-print("FISHY Android branding + fullscreen applied")
+# ============================================================
+# 9. GOOGLE PLAY AUTOMATIC PROTECTION - MIN SDK 24
+# ============================================================
+
+variables_gradle = android / "variables.gradle"
+
+if not variables_gradle.exists():
+    raise SystemExit(
+        "ERROR: android/variables.gradle not found. "
+        "Cannot configure minSdkVersion."
+    )
+
+gradle_content = variables_gradle.read_text(encoding="utf-8")
+
+gradle_content, replacements = re.subn(
+    r"(\bminSdkVersion\s*=\s*)\d+",
+    r"\g<1>24",
+    gradle_content
+)
+
+if replacements != 1:
+    raise SystemExit(
+        "ERROR: Expected exactly one minSdkVersion definition "
+        f"in android/variables.gradle, found {replacements}."
+    )
+
+variables_gradle.write_text(
+    gradle_content,
+    encoding="utf-8"
+)
+
+# Verify the updated value.
+if not re.search(
+    r"\bminSdkVersion\s*=\s*24\b",
+    variables_gradle.read_text(encoding="utf-8")
+):
+    raise SystemExit(
+        "ERROR: Failed to configure minSdkVersion = 24"
+    )
+
+# ============================================================
+# 10. FINAL VALIDATION
+# ============================================================
+
+print("============================================")
+print("FISHY! RETRO - ANDROID PREPARATION COMPLETE")
+print("============================================")
+print("Android branding applied successfully")
+print("Adaptive icons configured")
+print("Splash screen configured")
+print("Immersive fullscreen enabled")
 print("Google OAuth deep link: fishyretro://auth/callback")
 print("AndroidManifest.xml validated successfully")
+print("Android minSdkVersion: 24")
+print("Google Play automatic protection requirement met")
+print("============================================")
