@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.android.billingclient.api.*;
 import com.getcapacitor.*;
+import com.getcapacitor.annotation.CapacitorPlugin;
 
 import java.util.*;
 
@@ -61,7 +62,7 @@ public class FishyBillingPlugin extends Plugin implements PurchasesUpdatedListen
 
             @Override
             public void onBillingServiceDisconnected() {
-                // BillingClient tentera de se reconnecter au prochain appel.
+                // Une nouvelle connexion sera tentée au prochain appel.
             }
         });
     }
@@ -97,7 +98,7 @@ public class FishyBillingPlugin extends Plugin implements PurchasesUpdatedListen
 
             client.queryProductDetailsAsync(params, (result, details) -> {
 
-                // Google Play Billing 8 : vérification du résultat.
+                // Vérification de la réponse Google Play Billing.
                 if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                     call.reject(
                         "Erreur Google Play Billing : " + result.getDebugMessage()
